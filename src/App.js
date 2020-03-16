@@ -31,7 +31,7 @@ const parseData = (input) => {
     if (!extracted[place]) {
       extracted[place] = []
     }
-    extracted[place].push({date: new Date(date).toDateString(), newCases: Number(newCases), newDeaths: Number(newDeaths)})
+    extracted[place].push({date: new Date(date).toISOString().substring(0,10), newCases: Number(newCases), newDeaths: Number(newDeaths), totalCases: Number(totalCases), totalDeaths: Number(totalDeaths)})
   }
 
   data = extracted

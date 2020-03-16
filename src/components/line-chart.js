@@ -11,12 +11,6 @@ import {
 } from "recharts";
 
 class CoronaChart extends Component {
-  // fixData = dataPoints => {
-  //   for (const point of dataPoints) {
-  //     point.date = new Date(point.date).toDateString();
-  //   }
-  //   return dataPoints;
-  // };
 
   render() {
     const { dataPoints } = this.props;
@@ -44,11 +38,11 @@ class CoronaChart extends Component {
           />
 
           <YAxis
-            dataKey="newCases"
+            dataKey="totalCases"
             domain={[0, "auto"]}
             width={80}
           >
-             <Label value="Perons" angle={-90} position="left" style={{ textAnchor: 'middle', fontSize: '80%', fill: 'rgba(255, 0, 0, 0.87)' }}></Label>
+             <Label value="Persons" angle={-90} position="left" offset={25} style={{ textAnchor: 'middle', fontSize: '80%', fill: 'rgba(200, 200, 0, 0.70)' }}></Label>
           />
           </YAxis>
           <Tooltip
@@ -68,6 +62,13 @@ class CoronaChart extends Component {
             type="monotone"
             dataKey="newCases"
             stroke="#ff7300"
+            yAxisId={0}
+          />
+          <Line
+            name="Total confirmed cases"
+            type="monotone"
+            dataKey="totalCases"
+            stroke="#ff00ff"
             yAxisId={0}
           />
           <Line
