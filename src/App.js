@@ -68,10 +68,12 @@ class App extends Component {
     return (
       <div className="App">
         <header className="App-header">
-          <div style={{width: '300px'}}>
+          <div style={{width: '40%'}}>
             <Select options={this.state.countries || countries} onChange={input => this._onChange(input)} defaultValue={this.state.country || initialCountrySelect} styles={customStyles} />
           </div>
-        <CoronaChart dataPoints={this.state.dataForCountry} /> 
+          <div style={{width: '90%', height: '60%'}}>
+            <CoronaChart dataPoints={this.state.dataForCountry} /> 
+          </div>
         </header>
       </div>
     );
