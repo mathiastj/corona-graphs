@@ -14,7 +14,10 @@
     "react-select": "^3.0.8",
     "recharts": "^1.8.5"
   },
+  "homepage": "http://mathiastj.github.io/corona-graphs",
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -40,6 +43,7 @@
     "eslint": "^6.8.0",
     "eslint-config-prettier": "~6.10.0",
     "eslint-plugin-prettier": "~3.1.2",
+    "gh-pages": "^2.2.0",
     "prettier": "~1.19.1"
   }
 }
