@@ -21,7 +21,7 @@ class CoronaChart extends Component {
       { dataKey: 'newCases', color: '#ff7300', label: 'Daily cases'},
       { dataKey: 'newDeaths', color: '#ffff00', label: 'Daily deaths'},
       { dataKey: 'totalCases', color: '#ff00ff', label: 'Total cases'},
-      { dataKey: 'totalDeaths', color: '#0000ff', label: 'Total Deaths'}
+      { dataKey: 'totalDeaths', color: '#34c3eb', label: 'Total Deaths'}
     ]}
   }
 

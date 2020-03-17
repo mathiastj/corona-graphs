@@ -75,6 +75,7 @@ class App extends Component {
             <CoronaChart dataPoints={this.state.dataForCountry} /> 
           </div>
         </header>
+        <div className="Bottom-right">Sources: WHO situation reports via <a href="https://github.com/owid/covid-19-who/tree/master/public/data">OWID</a> under <a href="https://creativecommons.org/licenses/by/4.0/">license</a></div>
       </div>
     );
   }
