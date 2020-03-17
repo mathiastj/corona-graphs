@@ -12,19 +12,20 @@ import {
   YAxis
 } from "recharts";
 
+const prioritizedDataKeys = ['totalCases', 'newCases', 'totalDeaths','newDeaths']
+
 class CoronaChart extends Component {
   constructor(props) {
     super(props)
     this.state = { disabled: [], chartLines: [
-      { dataKey: 'newCases', color: '#ff7300', label: 'Daily confirmed deaths'},
-      { dataKey: 'newDeaths', color: '#ffff00', label: 'Daily confirmed cases'},
-      { dataKey: 'totalCases', color: '#ff00ff', label: 'Total confirmed cases'}
-    //,{totalDeaths: ''}
+      { dataKey: 'newCases', color: '#ff7300', label: 'Daily cases'},
+      { dataKey: 'newDeaths', color: '#ffff00', label: 'Daily deaths'},
+      { dataKey: 'totalCases', color: '#ff00ff', label: 'Total cases'},
+      { dataKey: 'totalDeaths', color: '#0000ff', label: 'Total Deaths'}
     ]}
   }
 
   handleClick(dataKey) {
-    console.log(dataKey)
     if (this.state.disabled.includes(dataKey)) {
       this.setState({disabled: this.state.disabled.filter(obj => obj !== dataKey)})
     } else {
@@ -36,11 +37,11 @@ class CoronaChart extends Component {
     return (
       <div className="customized-legend">
         {payload.map(entry => {
-          const { dataKey, color } = entry;
+          const { dataKey, color, label } = entry;
           const active = this.state.disabled.includes(dataKey);
           const style = {
             marginRight: 10,
-            color: active ? "#AAA" : "#000"
+            color: active ? "#000" : "#AAA"
           };
 
           return (
@@ -49,19 +50,19 @@ class CoronaChart extends Component {
               onClick={() => this.handleClick(dataKey)}
               style={style}
             >
-              <Surface width={10} height={10}>
-                <Symbols cx={5} cy={5} type="circle" size={50} fill={color} />
+              <Surface width={20} height={20}>
+                <Symbols cx={10} cy={10} type="circle" size={50} fill={color} />
                 {active && (
                   <Symbols
-                    cx={5}
-                    cy={5}
+                    cx={10}
+                    cy={10}
                     type="circle"
                     size={25}
                     fill={"#FFF"}
                   />
                 )}
               </Surface>
-              <span>{dataKey}</span>
+              <span>{label}</span>
             </span>
           );
         })}
@@ -71,7 +72,6 @@ class CoronaChart extends Component {
 
   render() {
     const { dataPoints } = this.props;
-    // console.log(dataPoints)
 
     if (!dataPoints) {
       return null;
@@ -85,7 +85,7 @@ class CoronaChart extends Component {
           width={800}
           height={800}
           data={data}
-          margin={{ top: 25, right: 25, left: 50, bottom: 25 }}
+          margin={{ top: 25, right: 25, left: 40, bottom: 25 }}
         >
           {
             this.state.chartLines.filter(chartLine => !this.state.disabled.includes(chartLine.dataKey)).map(chartLine =>
@@ -101,16 +101,17 @@ class CoronaChart extends Component {
           <XAxis
             dataKey="date"
             textAnchor="end"
-            tick={{ angle: -70 }}
+            tick={{ angle: -70, fontSize: 20 }}
             height={225}
           />
 
           <YAxis
-            dataKey="totalCases"
+            dataKey={prioritizedDataKeys.filter(dataKey => !this.state.disabled.includes(dataKey))[0]}
             domain={[0, "auto"]}
-            width={80}
+            tick={{ fontSize: 20 }}
+            width={40}
           >
-             <Label value="Persons" angle={-90} position="insideBottomLeft" offset={1} style={{ fontSize: '80%', fill: 'rgba(200, 200, 0, 0.70)' }}></Label>
+             <Label value="Persons" angle={-90} position="insideBottomLeft" offset={1} style={{ fontSize: '80%', fill: 'rgba(0, 204, 102, 0.70)' }}></Label>
           />
           </YAxis>
           <Tooltip
@@ -118,35 +119,11 @@ class CoronaChart extends Component {
               borderColor: "white",
               boxShadow: "2px 2px 3px 0px rgb(204, 204, 204)"
             }}
-            // formatter={(value, name, props) => {
-            //   return [rankFormatter(value)];
-            // }}
             contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.8)" }}
             labelStyle={{ fontWeight: "bold", color: "#666666" }}
           />
           <Legend verticalAlign="top" height={36} content={this.renderCustomizedLegend} 
-            payload={this.state.chartLines.map(chartLine => ({dataKey: chartLine.dataKey, color: chartLine.color}))}/>
-          {/* <Line
-            name="Daily confirmed cases"
-            type="monotone"
-            dataKey="newCases"
-            stroke="#ff7300"
-            yAxisId={0}
-          /> */}
-          {/* <Line
-            name="Total confirmed cases"
-            type="monotone"
-            dataKey="totalCases"
-            stroke="#ff00ff"
-            yAxisId={0}
-          /> */}
-          {/* <Line
-            name="Daily confirmed deaths"
-            type="monotone"
-            dataKey="newDeaths"
-            stroke="#ffff00"
-            yAxisId={0}
-          /> */}
+            payload={this.state.chartLines}/>
         </LineChart>
       </ResponsiveContainer>
     );

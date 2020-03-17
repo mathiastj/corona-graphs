@@ -71,7 +71,7 @@ class App extends Component {
           <div style={{width: '40%'}}>
             <Select options={this.state.countries || countries} onChange={input => this._onChange(input)} defaultValue={this.state.country || initialCountrySelect} styles={customStyles} />
           </div>
-          <div style={{width: '90%', height: '60%'}}>
+          <div style={{width: '98%', height: '80%'}}>
             <CoronaChart dataPoints={this.state.dataForCountry} /> 
           </div>
         </header>
