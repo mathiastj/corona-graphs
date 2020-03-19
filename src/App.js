@@ -5,7 +5,7 @@ import CoronaChart from "./components/line-chart";
 
 import Select from 'react-select';
 
-const endpoint = "https://raw.githubusercontent.com/owid/covid-19-who/master/public/data/full_data.csv";
+const endpoint = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/full_data.csv";
 const initialCountrySelect = {value: 'Denmark', label: 'Denmark'};
 const initialCountry = initialCountrySelect.value
 const countries = [{value: 'Denmark', label: 'Denmark'}];
@@ -75,7 +75,7 @@ class App extends Component {
             <CoronaChart dataPoints={this.state.dataForCountry} /> 
           </div>
         </header>
-        <div className="Bottom-right">Sources: WHO situation reports via <a href="https://github.com/owid/covid-19-who/tree/master/public/data">OWID</a> under <a href="https://creativecommons.org/licenses/by/4.0/">license</a></div>
+        <div className="Bottom-right">Sources: ECDC via <a href={endpoint}>OWID</a> under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></div>
       </div>
     );
   }
