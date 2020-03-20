@@ -8,7 +8,7 @@ import Select from 'react-select';
 const endpoint = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/full_data.csv";
 const initialCountrySelect = {value: 'Denmark', label: 'Denmark'};
 const initialCountry = initialCountrySelect.value
-const countries = [{value: 'Denmark', label: 'Denmark'}];
+const countries = [initialCountrySelect];
 
 let data
 
@@ -19,6 +19,7 @@ const parseData = (input) => {
   const extracted = {}
   const dataPerLine = String(input).split('\n')
   let header = true
+  const firstDataPointPerPlace = {}
   for (const line of dataPerLine) {
     if (header) {
       header = false
@@ -31,7 +32,23 @@ const parseData = (input) => {
     if (!extracted[place]) {
       extracted[place] = []
     }
-    extracted[place].push({date: new Date(date).toISOString().substring(0,10), newCases: Number(newCases), newDeaths: Number(newDeaths), totalCases: Number(totalCases), totalDeaths: Number(totalDeaths)})
+    if (!firstDataPointPerPlace[place]){
+      if (Number(newCases) === 0 &&
+          Number(newDeaths) === 0 &&
+          Number(totalCases) === 0 &&
+          Number(totalDeaths) === 0) {
+        continue
+      } else {
+        firstDataPointPerPlace[place] = true
+      }
+    }
+    extracted[place].push({
+        date: new Date(date).toISOString().substring(0,10),
+        newCases: Number(newCases) === 0 ? null : Number(newCases),
+        newDeaths: Number(newDeaths) === 0 ? null : Number(newDeaths),
+        totalCases: Number(totalCases) === 0 ? null :Number(totalCases),
+        totalDeaths: Number(totalDeaths) === 0 ? null :Number(totalDeaths)
+      })
   }
 
   data = extracted
