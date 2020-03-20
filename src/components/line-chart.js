@@ -36,7 +36,6 @@ class CoronaChart extends Component {
 
 
   handleOptionChange(scale) {
-    console.log(scale)
     this.setState({
       scale
     });
@@ -47,7 +46,7 @@ class CoronaChart extends Component {
 
   renderCustomizedLegend = ({ payload }) => {
     return (
-      <div className="customized-legend">
+      <div className="customized-legend" style={{marginBottom: 30}}>
         {payload.map(entry => {
           const { dataKey, color, label } = entry;
           const active = this.state.disabled.includes(dataKey);
@@ -93,7 +92,7 @@ class CoronaChart extends Component {
 
     return (
       <div>
-        <div style={{marginBottom: -10}}>
+        <div>
           <span
             onClick={() => this.handleOptionChange("linear")}>
             <input type="radio" id="linear" name="scale" value="linear" checked={this.state.scale === 'linear'} />
@@ -129,6 +128,7 @@ class CoronaChart extends Component {
             textAnchor="end"
             tick={{ angle: -70, fontSize: 20 }}
             height={225}
+            padding={{right: 3, left: 3}}
             />
 
           <YAxis
@@ -138,6 +138,7 @@ class CoronaChart extends Component {
             width={40}
             scale={this.state.scale}
             allowDataOverflow
+            padding={{top: 3, bottom: 3}}
             >
              {/* <Label value="Persons" angle={-90} position="insideBottomLeft" offset={1} style={{ fontSize: '80%', fill: 'rgba(0, 204, 102, 0.70)' }}></Label> */}
           />
@@ -152,7 +153,7 @@ class CoronaChart extends Component {
             contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.8)" }}
             labelStyle={{ fontWeight: "bold", color: "#666666" }}
             />
-          <Legend verticalAlign="top" height={36} content={this.renderCustomizedLegend} 
+          <Legend verticalAlign="top" height={45} content={this.renderCustomizedLegend} 
             payload={this.state.chartLines}/>
         </LineChart>
       </ResponsiveContainer>

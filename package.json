@@ -14,7 +14,7 @@
     "react-select": "^3.0.8",
     "recharts": "^1.8.5"
   },
-  "homepage": "http://mathiastj.github.io/corona-graphs",
+  "homepage": "https://mathiastj.github.io/corona-graphs",
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d build",

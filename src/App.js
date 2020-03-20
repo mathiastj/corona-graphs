@@ -6,7 +6,7 @@ import CoronaChart from "./components/line-chart";
 import Select from 'react-select';
 
 const endpoint = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/full_data.csv";
-const initialCountrySelect = {value: 'Denmark', label: 'Denmark'};
+const initialCountrySelect = {value: 'Italy', label: 'Italy'};
 const initialCountry = initialCountrySelect.value
 const countries = [initialCountrySelect];
 
