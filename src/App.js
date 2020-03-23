@@ -61,13 +61,14 @@ class App extends Component {
 
   async getData(country) {
     const parsed = this.state.parsedData
-    const labels = Object.keys(parsed).map(key => ({value: key, label: key}))
-    this.setState({dataForCountry: parsed[country], countries: labels, country});
+    this.setState({dataForCountry: parsed[country], country});
   }
 
   async componentDidMount() {
     const res = await axios.get(`${endpoint}`);
-    this.setState({parsedData: parseData(res.data)})
+    const parsed = parseData(res.data)
+    const labels = Object.keys(parsed).map(key => ({value: key, label: key}))
+    this.setState({parsedData: parsed, countries: labels})
     await this.getData(initialCountry);
   }
 
