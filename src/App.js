@@ -8,7 +8,7 @@ import Select from 'react-select';
 const endpoint = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/full_data.csv";
 const initialCountrySelect = {value: 'Italy', label: 'Italy'};
 const initialCountry = initialCountrySelect.value
-const countries = [initialCountrySelect];
+const initialCountries = [initialCountrySelect];
 
 const parseData = (input) => {
   const extracted = {}
@@ -61,7 +61,8 @@ class App extends Component {
 
   async getData(country) {
     const parsed = this.state.parsedData
-    this.setState({dataForCountry: parsed[country], country});
+    this.setState({dataForCountry: parsed[country], country: {value: country, label: country}});
+    
   }
 
   async componentDidMount() {
@@ -77,14 +78,15 @@ class App extends Component {
   }
 
   render() {
+    const { countries, country, dataForCountry } = this.state;
     return (
       <div className="App">
         <header className="App-header">
           <div style={{width: '40%'}}>
-            <Select options={this.state.countries || countries} onChange={input => this._onChange(input)} defaultValue={this.state.country || initialCountrySelect} styles={customStyles} />
+            <Select options={countries || initialCountries} onChange={input => this._onChange(input)} defaultValue={initialCountrySelect} styles={customStyles} value={country}/>
           </div>
           <div style={{width: '95%', height: '80%'}}>
-            <CoronaChart dataPoints={this.state.dataForCountry} /> 
+            <CoronaChart dataPoints={dataForCountry} /> 
           </div>
         </header>
         <div className="Bottom-right">Sources: ECDC via <a href={endpoint}>OWID</a> under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></div>
