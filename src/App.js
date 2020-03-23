@@ -10,12 +10,7 @@ const initialCountrySelect = {value: 'Italy', label: 'Italy'};
 const initialCountry = initialCountrySelect.value
 const countries = [initialCountrySelect];
 
-let data
-
 const parseData = (input) => {
-  if (data) {
-    return data
-  }
   const extracted = {}
   const dataPerLine = String(input).split('\n')
   let header = true
@@ -51,8 +46,7 @@ const parseData = (input) => {
       })
   }
 
-  data = extracted
-  return data
+  return extracted
 }
 
 const customStyles = {
@@ -66,15 +60,15 @@ class App extends Component {
   state = {}
 
   async getData(country) {
-    const res = await axios.get(`${endpoint}`);
-    const parsed = parseData(res.data)
+    const parsed = this.state.parsedData
     const labels = Object.keys(parsed).map(key => ({value: key, label: key}))
     this.setState({dataForCountry: parsed[country], countries: labels, country});
   }
 
   async componentDidMount() {
+    const res = await axios.get(`${endpoint}`);
+    this.setState({parsedData: parseData(res.data)})
     await this.getData(initialCountry);
-
   }
 
   async _onChange(country) {
@@ -88,7 +82,7 @@ class App extends Component {
           <div style={{width: '40%'}}>
             <Select options={this.state.countries || countries} onChange={input => this._onChange(input)} defaultValue={this.state.country || initialCountrySelect} styles={customStyles} />
           </div>
-          <div style={{width: '98%', height: '80%'}}>
+          <div style={{width: '95%', height: '80%'}}>
             <CoronaChart dataPoints={this.state.dataForCountry} /> 
           </div>
         </header>
