@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { setDifference } from "../utils/set-diff";
 import {
   Legend,
   Label,
@@ -42,16 +43,16 @@ const distinguishableColors = [
   '#FF5005'
 ]
 
-const calcPrioritizedKeys = (dataMap) => {
-  console.log(dataMap)
+const calcPrioritizedKeys = (dataPoints, countries) => {
+  // console.log(dataMap)
   const maxPerDataKey = {}
-  for (const [country, data] of Object.entries(dataMap)) {
-    console.log(country)
+  for (const country of countries) {
+    // console.log(country)
     maxPerDataKey[`newCases${country}`] = 0
     maxPerDataKey[`totalCases${country}`] = 0
     maxPerDataKey[`totalDeaths${country}`] = 0
     maxPerDataKey[`newDeaths${country}`] = 0
-    for (const entry of data) {
+    for (const entry of dataPoints) {
       if (entry[`newCases${country}`] > maxPerDataKey[`newCases${country}`]) {
         maxPerDataKey[`newCases${country}`] = entry[`newCases${country}`]
       }
@@ -138,42 +139,80 @@ class CoronaChart extends Component {
   };
 
   static getDerivedStateFromProps(props, state) {
-    const { dataPoints } = props
-   if (!dataPoints || state.prevDataPoints === dataPoints) {
-     return null
-   }
-
-    const chartLines = []
-    const disabled = []
-    for (const country of Object.keys(dataPoints)) {
-      chartLines.push({ dataKey: `newCases${country}`, color: distinguishableColors.pop(), label: ` ${country} new cases`})
-      chartLines.push({ dataKey: `newDeaths${country}`, color: distinguishableColors.pop(), label: ` ${country} new deaths`})
-      chartLines.push({ dataKey: `totalCases${country}`, color: distinguishableColors.pop(), label: ` ${country} cases`})
-      chartLines.push({ dataKey: `totalDeaths${country}`, color: distinguishableColors.pop(), label: ` ${country} deaths`})
-      disabled.push(`totalCases${country}`)
-      disabled.push(`totalDeaths${country}`)
+    const { dataPoints, countries } = props
+    if (!dataPoints || state.prevCountries === countries) {
+      return null
     }
-    const yLabelPrioritizedKeys = calcPrioritizedKeys(dataPoints)
+
+
+
+    
+    if (state.prevCountries) {
+      const prev = new Set(state.prevCountries)
+      const current = new Set(countries)
+  
+      const removedCountries = setDifference(prev, current)
+      // Push the old used colors back into the available pool
+      // Remove chartLines if country no longer selected
+      for (let i = state.chartLines.length - 1; i >= 0; i--) {
+        if (removedCountries.has(state.chartLines[i].country)) {
+          distinguishableColors.push(state.chartLines[i].color)
+          state.chartLines.splice(state.chartLines.indexOf(state.chartLines[i]), 1)
+        }
+      }
+
+
+      // Remove disabled lengends if country no longer selected
+      for (let i = state.disabled.length - 1; i >= 0; i--) {
+        // console.log(item)
+        let removed = false
+        for (const removedCountry of removedCountries) {
+          if (state.disabled[i].includes(removedCountry)) {
+            // console.log(removedCountry)
+            removed = true
+          }
+        }
+        if (removed) {
+          state.disabled.splice(state.disabled.indexOf(state.disabled[i]), 1)
+        }
+      }
+    }
+    
+
+    const chartLines = state.chartLines || []
+    const disabled = state.disabled || []
+    for (const country of countries) {
+      if (!state.prevCountries || (state.prevCountries && !state.prevCountries.includes(country))) {
+        chartLines.push({ country, dataKey: `newCases${country}`, color: distinguishableColors.pop(), label: `${country} new cases`})
+        chartLines.push({ country, dataKey: `newDeaths${country}`, color: distinguishableColors.pop(), label: `${country} new deaths`})
+        chartLines.push({ country, dataKey: `totalCases${country}`, color: distinguishableColors.pop(), label: `${country} cases`})
+        chartLines.push({ country, dataKey: `totalDeaths${country}`, color: distinguishableColors.pop(), label: `${country} deaths`})
+        disabled.push(`totalCases${country}`)
+        disabled.push(`totalDeaths${country}`)
+      }
+    }
+    const yLabelPrioritizedKeys = calcPrioritizedKeys(dataPoints, countries)
 
 
     return {
-      chartLines, disabled, prevDataPoints: dataPoints, yLabelPrioritizedKeys
+      chartLines, disabled, prevCountries: countries, yLabelPrioritizedKeys
     }
   }
 
 
   render() {
-    const { dataPoints } = this.props
+    const { dataPoints, countries } = this.props
+    // console.log(dataPoints)
 
     if (!dataPoints) {
       return null;
     }
     
-    const data = []
+    const data = dataPoints
     // TODO: gotta merge the datasets on the date !
-    for (const values of Object.values(dataPoints)) {
-      data.push(...values)
-    }
+    // for (const values of Object.values(dataPoints)) {
+    //   data.push(...values)
+    // }
 
     return (
       <div>
