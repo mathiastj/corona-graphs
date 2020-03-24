@@ -12,7 +12,6 @@ const initialCountries = [initialCountrySelect]
 const initialSelectableCountries = [initialCountrySelect];
 
 const parseData = (input) => {
-  const extracted = {}
   const newExtraction = {}
   const countries = {}
   const dataPerLine = String(input).split('\n')
@@ -26,9 +25,6 @@ const parseData = (input) => {
     const [date, place, newCases, newDeaths, totalCases, totalDeaths] = line.split(',')
     if (!place) {
       continue
-    }
-    if (!extracted[place]) {
-      extracted[place] = []
     }
     countries[place] = true
     if (!firstDataPointPerPlace[place]) {
@@ -60,14 +56,6 @@ const parseData = (input) => {
         ...currentData
       }
     }
-    
-    extracted[place].push({
-        date: dateFormatted,
-        [`newCases${place}`]: formatStringToNumberOrNull(newCases),
-        [`newDeaths${place}`]: formatStringToNumberOrNull(newDeaths),
-        [`totalCases${place}`]: formatStringToNumberOrNull(totalCases), 
-        [`totalDeaths${place}`]: formatStringToNumberOrNull(totalDeaths)
-    })
   }
 
   // Resort the data on date
@@ -75,7 +63,7 @@ const parseData = (input) => {
     return a.date.localeCompare(b.date)
   })
 
-  return [extracted, dataPoints]
+  return [dataPoints, Object.keys(countries)]
 }
 
 const customStyles = {
@@ -92,14 +80,9 @@ class App extends Component {
   }
 
   async getData(countries) {
-    const parsed = this.state.parsedData
     const newParsed = this.state.newParsedData
     let multiData = []
-    const multiCountryParse = {}
     if (countries) {
-      for (const country of countries) {
-        multiCountryParse[country.value] = parsed[country.value]
-      }
       // Build data set with only the selected countries and only after they started getting data
       let includeDataPointsGoingForward = false
       for (const dataPoint of Object.values(newParsed)) {
@@ -123,15 +106,15 @@ class App extends Component {
       }
     }
 
-    this.setState({countryData: multiCountryParse, currentCountries: countries, multiCountryData: multiData });
+    this.setState({currentCountries: countries, multiCountryData: multiData });
     
   }
 
   async componentDidMount() {
     const res = await axios.get(`${endpoint}`);
-    const [parsed, newParsed] = parseData(res.data)
-    const labels = Object.keys(parsed).map(key => ({value: key, label: key}))
-    this.setState({parsedData: parsed, selectableCountries: labels, newParsedData: newParsed})
+    const [parsed, countries] = parseData(res.data)
+    const labels = countries.map(key => ({value: key, label: key}))
+    this.setState({selectableCountries: labels, newParsedData: parsed})
     await this.getData(initialCountries);
   }
 
@@ -143,7 +126,7 @@ class App extends Component {
   }
 
   render() {
-    const { selectableCountries, currentCountries, countryData, multiCountryData } = this.state;
+    const { selectableCountries, currentCountries, multiCountryData } = this.state;
     return (
       <div className="App">
         <header className="App-header">

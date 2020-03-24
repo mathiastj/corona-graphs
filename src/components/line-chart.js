@@ -44,10 +44,8 @@ const distinguishableColors = [
 ]
 
 const calcPrioritizedKeys = (dataPoints, countries) => {
-  // console.log(dataMap)
   const maxPerDataKey = {}
   for (const country of countries) {
-    // console.log(country)
     maxPerDataKey[`newCases${country}`] = 0
     maxPerDataKey[`totalCases${country}`] = 0
     maxPerDataKey[`totalDeaths${country}`] = 0
@@ -144,9 +142,6 @@ class CoronaChart extends Component {
       return null
     }
 
-
-
-    
     if (state.prevCountries) {
       const prev = new Set(state.prevCountries)
       const current = new Set(countries)
@@ -161,14 +156,11 @@ class CoronaChart extends Component {
         }
       }
 
-
       // Remove disabled lengends if country no longer selected
       for (let i = state.disabled.length - 1; i >= 0; i--) {
-        // console.log(item)
         let removed = false
         for (const removedCountry of removedCountries) {
           if (state.disabled[i].includes(removedCountry)) {
-            // console.log(removedCountry)
             removed = true
           }
         }
@@ -178,7 +170,6 @@ class CoronaChart extends Component {
       }
     }
     
-
     const chartLines = state.chartLines || []
     const disabled = state.disabled || []
     for (const country of countries) {
@@ -191,8 +182,8 @@ class CoronaChart extends Component {
         disabled.push(`totalDeaths${country}`)
       }
     }
-    const yLabelPrioritizedKeys = calcPrioritizedKeys(dataPoints, countries)
 
+    const yLabelPrioritizedKeys = calcPrioritizedKeys(dataPoints, countries)
 
     return {
       chartLines, disabled, prevCountries: countries, yLabelPrioritizedKeys
@@ -201,18 +192,13 @@ class CoronaChart extends Component {
 
 
   render() {
-    const { dataPoints, countries } = this.props
-    // console.log(dataPoints)
+    const { dataPoints } = this.props
 
     if (!dataPoints) {
       return null;
     }
     
     const data = dataPoints
-    // TODO: gotta merge the datasets on the date !
-    // for (const values of Object.values(dataPoints)) {
-    //   data.push(...values)
-    // }
 
     return (
       <div>
