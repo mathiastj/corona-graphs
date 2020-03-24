@@ -12,18 +12,73 @@ import {
   YAxis
 } from "recharts";
 
-const prioritizedDataKeys = ['totalCases', 'newCases', 'totalDeaths','newDeaths']
+const distinguishableColors = [
+  '#FFFFFF',
+  '#F0A3FF',
+  '#0075DC',
+  '#993F00',
+  '#4C005C',
+  '#191919',
+  '#005C31',
+  '#2BCE48',
+  '#FFCC99',
+  '#808080',
+  '#94FFB5',
+  '#8F7C00',
+  '#9DCC00',
+  '#C20088',
+  '#003380',
+  '#FFA405',
+  '#FFA8BB',
+  '#426600',
+  '#FF0010',
+  '#5EF1F2',
+  '#00998F',
+  '#E0FF66',
+  '#740AFF',
+  '#990000',
+  '#FFFF80',
+  '#FFFF00',
+  '#FF5005'
+]
+
+const calcPrioritizedKeys = (dataMap) => {
+  console.log(dataMap)
+  const maxPerDataKey = {}
+  for (const [country, data] of Object.entries(dataMap)) {
+    console.log(country)
+    maxPerDataKey[`newCases${country}`] = 0
+    maxPerDataKey[`totalCases${country}`] = 0
+    maxPerDataKey[`totalDeaths${country}`] = 0
+    maxPerDataKey[`newDeaths${country}`] = 0
+    for (const entry of data) {
+      if (entry[`newCases${country}`] > maxPerDataKey[`newCases${country}`]) {
+        maxPerDataKey[`newCases${country}`] = entry[`newCases${country}`]
+      }
+      if (entry[`totalCases${country}`] > maxPerDataKey[`totalCases${country}`]) {
+        maxPerDataKey[`totalCases${country}`] = entry[`totalCases${country}`]
+      }
+      if (entry[`totalDeaths${country}`] > maxPerDataKey[`totalDeaths${country}`]) {
+        maxPerDataKey[`totalDeaths${country}`] = entry[`totalDeaths${country}`]
+      }
+      if (entry[`newDeaths${country}`] > maxPerDataKey[`newDeaths${country}`]) {
+        maxPerDataKey[`newDeaths${country}`] = entry[`newDeaths${country}`]
+      }
+    }
+  }
+  const sortedKeys = Object.keys(maxPerDataKey).map(key => {
+    return {key, value: maxPerDataKey[key]}
+  // Sort descending on value
+  }).sort((a, b) => {
+    return b.value - a.value
+  })
+  return sortedKeys.map(sorted => sorted.key)
+}
 
 class CoronaChart extends Component {
   constructor(props) {
-    super(props)
-    this.state = { disabled: ['totalCases', 'totalDeaths'], chartLines: [
-      { dataKey: 'newCases', color: '#ff7300', label: 'Daily cases'},
-      { dataKey: 'newDeaths', color: '#ffff00', label: 'Daily deaths'},
-      { dataKey: 'totalCases', color: '#ff00ff', label: 'Total cases'},
-      { dataKey: 'totalDeaths', color: '#34c3eb', label: 'Total Deaths'}
-    ],
-    scale: 'linear'}
+    super(props) 
+    this.state = {scale: 'linear'}
   }
 
   handleClick(dataKey) {
@@ -52,7 +107,8 @@ class CoronaChart extends Component {
           const active = this.state.disabled.includes(dataKey);
           const style = {
             marginRight: 10,
-            color: active ? "#000" : "#AAA"
+            color: active ? "#000" : "#AAA",
+            fontSize: '1.5rem'
           };
 
           return (
@@ -81,14 +137,43 @@ class CoronaChart extends Component {
     );
   };
 
+  static getDerivedStateFromProps(props, state) {
+    const { dataPoints } = props
+   if (!dataPoints || state.prevDataPoints === dataPoints) {
+     return null
+   }
+
+    const chartLines = []
+    const disabled = []
+    for (const country of Object.keys(dataPoints)) {
+      chartLines.push({ dataKey: `newCases${country}`, color: distinguishableColors.pop(), label: ` ${country} new cases`})
+      chartLines.push({ dataKey: `newDeaths${country}`, color: distinguishableColors.pop(), label: ` ${country} new deaths`})
+      chartLines.push({ dataKey: `totalCases${country}`, color: distinguishableColors.pop(), label: ` ${country} cases`})
+      chartLines.push({ dataKey: `totalDeaths${country}`, color: distinguishableColors.pop(), label: ` ${country} deaths`})
+      disabled.push(`totalCases${country}`)
+      disabled.push(`totalDeaths${country}`)
+    }
+    const yLabelPrioritizedKeys = calcPrioritizedKeys(dataPoints)
+
+
+    return {
+      chartLines, disabled, prevDataPoints: dataPoints, yLabelPrioritizedKeys
+    }
+  }
+
+
   render() {
-    const { dataPoints } = this.props;
+    const { dataPoints } = this.props
 
     if (!dataPoints) {
       return null;
     }
-
-    const data = dataPoints
+    
+    const data = []
+    // TODO: gotta merge the datasets on the date !
+    for (const values of Object.values(dataPoints)) {
+      data.push(...values)
+    }
 
     return (
       <div>
@@ -120,6 +205,7 @@ class CoronaChart extends Component {
               dataKey={chartLine.dataKey}
               stroke={chartLine.color}
               yAxisId={0}
+              dot={{r: 2}}
               />
               )
             }
@@ -132,7 +218,7 @@ class CoronaChart extends Component {
             />
 
           <YAxis
-            dataKey={prioritizedDataKeys.filter(dataKey => !this.state.disabled.includes(dataKey))[0]}
+            dataKey={this.state.yLabelPrioritizedKeys.filter(dataKey => !this.state.disabled.includes(dataKey))[0]}
             domain={this.state.scale === 'log' ? [1, 'dataMax'] : [0, 'dataMax']}
             tick={{ fontSize: 20 }}
             width={40}
@@ -153,7 +239,7 @@ class CoronaChart extends Component {
             contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.8)" }}
             labelStyle={{ fontWeight: "bold", color: "#666666" }}
             />
-          <Legend verticalAlign="top" height={45} content={this.renderCustomizedLegend} 
+          <Legend verticalAlign="bottom" height={45} content={this.renderCustomizedLegend} 
             payload={this.state.chartLines}/>
         </LineChart>
       </ResponsiveContainer>
