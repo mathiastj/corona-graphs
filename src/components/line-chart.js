@@ -176,8 +176,8 @@ class CoronaChart extends Component {
       if (!state.prevCountries || (state.prevCountries && !state.prevCountries.includes(country))) {
         chartLines.push({ country, dataKey: `newCases${country}`, color: distinguishableColors.pop(), label: `${country} new cases`})
         chartLines.push({ country, dataKey: `newDeaths${country}`, color: distinguishableColors.pop(), label: `${country} new deaths`})
-        chartLines.push({ country, dataKey: `totalCases${country}`, color: distinguishableColors.pop(), label: `${country} cases`})
-        chartLines.push({ country, dataKey: `totalDeaths${country}`, color: distinguishableColors.pop(), label: `${country} deaths`})
+        chartLines.push({ country, dataKey: `totalCases${country}`, color: distinguishableColors.pop(), label: `${country} total cases`})
+        chartLines.push({ country, dataKey: `totalDeaths${country}`, color: distinguishableColors.pop(), label: `${country} total deaths`})
         disabled.push(`totalCases${country}`)
         disabled.push(`totalDeaths${country}`)
       }

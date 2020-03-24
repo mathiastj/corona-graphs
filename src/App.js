@@ -7,9 +7,7 @@ import { formatStringToNumberOrNull } from "./utils/data-format";
 import Select from 'react-select';
 
 const endpoint = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/full_data.csv";
-const initialCountrySelect = {value: 'Italy', label: 'Italy'};
-const initialCountries = [initialCountrySelect]
-const initialSelectableCountries = [initialCountrySelect];
+const initialCountries = [{value: 'Italy', label: 'Italy'}, {value: 'Spain', label: 'Spain'}]
 
 const parseData = (input) => {
   const newExtraction = {}
@@ -75,11 +73,15 @@ const customStyles = {
 
 class App extends Component {
   state = {
-    selectableCountries: initialSelectableCountries,
-    currentCountries: [initialCountrySelect]
+    selectableCountries: initialCountries,
+    currentCountries: initialCountries
   }
 
   async getData(countries) {
+    if (!countries) {
+      this.setState({currentCountries: [], multiCountryData: null })
+      return
+    }
     const newParsed = this.state.newParsedData
     let multiData = []
     if (countries) {
@@ -106,7 +108,7 @@ class App extends Component {
       }
     }
 
-    this.setState({currentCountries: countries, multiCountryData: multiData });
+    this.setState({currentCountries: countries, multiCountryData: multiData })
     
   }
 
@@ -119,9 +121,6 @@ class App extends Component {
   }
 
   async _onChange(countries) {
-    if (!countries) {
-      return this.getData(initialCountries)
-    } 
     await this.getData(countries)
   }
 
@@ -131,7 +130,7 @@ class App extends Component {
       <div className="App">
         <header className="App-header">
           <div style={{width: '40%'}}>
-            <Select isMulti options={selectableCountries} onChange={input => this._onChange(input)} defaultValue={initialCountrySelect} styles={customStyles} value={currentCountries}/>
+            <Select isMulti options={selectableCountries} onChange={input => this._onChange(input)} defaultValue={initialCountries} styles={customStyles} value={currentCountries}/>
           </div>
           <div style={{width: '95%', height: '80%'}}>
             <CoronaChart dataPoints={multiCountryData} countries={currentCountries.map(country => country.value)}/> 
