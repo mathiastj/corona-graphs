@@ -2,16 +2,16 @@ import React, { Component } from "react";
 import "./App.css";
 import axios from "axios";
 import CoronaChart from "./components/line-chart";
+import { formatStringToNumberOrNull } from "./utils/data-format";
 
 import Select from 'react-select';
 
 const endpoint = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/full_data.csv";
-const initialCountrySelect = {value: 'Italy', label: 'Italy'};
-const initialCountry = initialCountrySelect.value
-const initialCountries = [initialCountrySelect];
+const initialCountries = [{value: 'Italy', label: 'Italy'}, {value: 'Spain', label: 'Spain'}]
 
 const parseData = (input) => {
-  const extracted = {}
+  const newExtraction = {}
+  const countries = {}
   const dataPerLine = String(input).split('\n')
   let header = true
   const firstDataPointPerPlace = {}
@@ -24,10 +24,8 @@ const parseData = (input) => {
     if (!place) {
       continue
     }
-    if (!extracted[place]) {
-      extracted[place] = []
-    }
-    if (!firstDataPointPerPlace[place]){
+    countries[place] = true
+    if (!firstDataPointPerPlace[place]) {
       if (Number(newCases) === 0 &&
           Number(newDeaths) === 0 &&
           Number(totalCases) === 0 &&
@@ -37,16 +35,33 @@ const parseData = (input) => {
         firstDataPointPerPlace[place] = true
       }
     }
-    extracted[place].push({
-        date: new Date(date).toISOString().substring(0,10),
-        newCases: Number(newCases) === 0 ? null : Number(newCases),
-        newDeaths: Number(newDeaths) === 0 ? null : Number(newDeaths),
-        totalCases: Number(totalCases) === 0 ? null :Number(totalCases),
-        totalDeaths: Number(totalDeaths) === 0 ? null :Number(totalDeaths)
-      })
+    const dateFormatted = new Date(date).toISOString().substring(0,10)
+    if (!newExtraction[dateFormatted]) {
+      newExtraction[dateFormatted] = {
+        date: dateFormatted,
+        [`newCases${place}`]: formatStringToNumberOrNull(newCases),
+        [`newDeaths${place}`]: formatStringToNumberOrNull(newDeaths),
+        [`totalCases${place}`]: formatStringToNumberOrNull(totalCases), 
+        [`totalDeaths${place}`]: formatStringToNumberOrNull(totalDeaths)
+      }
+    } else {
+      const currentData = newExtraction[dateFormatted]
+      newExtraction[dateFormatted] = {
+        [`newCases${place}`]: formatStringToNumberOrNull(newCases),
+        [`newDeaths${place}`]: formatStringToNumberOrNull(newDeaths),
+        [`totalCases${place}`]: formatStringToNumberOrNull(totalCases), 
+        [`totalDeaths${place}`]: formatStringToNumberOrNull(totalDeaths), 
+        ...currentData
+      }
+    }
   }
 
-  return extracted
+  // Resort the data on date
+  const dataPoints = Object.values(newExtraction).sort((a, b) => {
+    return a.date.localeCompare(b.date)
+  })
+
+  return [dataPoints, Object.keys(countries)]
 }
 
 const customStyles = {
@@ -57,39 +72,72 @@ const customStyles = {
 }
 
 class App extends Component {
-  state = {}
+  state = {
+    selectableCountries: initialCountries,
+    currentCountries: initialCountries
+  }
 
-  async getData(country) {
-    const parsed = this.state.parsedData
-    this.setState({dataForCountry: parsed[country], country: {value: country, label: country}});
+  async getData(countries) {
+    if (!countries) {
+      this.setState({currentCountries: [], multiCountryData: null })
+      return
+    }
+    const newParsed = this.state.newParsedData
+    let multiData = []
+    if (countries) {
+      // Build data set with only the selected countries and only after they started getting data
+      let includeDataPointsGoingForward = false
+      for (const dataPoint of Object.values(newParsed)) {
+        for (const country of countries) {
+          if (dataPoint[`newCases${country.value}`]) {
+            includeDataPointsGoingForward = true
+            break
+          }
+        }
+        if (includeDataPointsGoingForward) {
+          const filteredDataPoint = {}
+          for (const country of countries) {
+            filteredDataPoint[`newCases${country.value}`] = dataPoint[`newCases${country.value}`] || null
+            filteredDataPoint[`newDeaths${country.value}`] = dataPoint[`newDeaths${country.value}`] || null
+            filteredDataPoint[`totalCases${country.value}`] = dataPoint[`totalCases${country.value}`] || null
+            filteredDataPoint[`totalDeaths${country.value}`] = dataPoint[`totalDeaths${country.value}`] || null
+          }
+          filteredDataPoint['date'] = dataPoint['date']
+          multiData.push(filteredDataPoint)
+        }
+      }
+    }
+
+    this.setState({currentCountries: countries, multiCountryData: multiData })
     
   }
 
   async componentDidMount() {
     const res = await axios.get(`${endpoint}`);
-    const parsed = parseData(res.data)
-    const labels = Object.keys(parsed).map(key => ({value: key, label: key}))
-    this.setState({parsedData: parsed, countries: labels})
-    await this.getData(initialCountry);
+    const [parsed, countries] = parseData(res.data)
+    const labels = countries.map(key => ({value: key, label: key}))
+    this.setState({selectableCountries: labels, newParsedData: parsed})
+    await this.getData(initialCountries);
   }
 
-  async _onChange(country) {
-    await this.getData(country.value)
+  async _onChange(countries) {
+    await this.getData(countries)
   }
 
   render() {
-    const { countries, country, dataForCountry } = this.state;
+    const { selectableCountries, currentCountries, multiCountryData } = this.state;
     return (
       <div className="App">
+        <div className="Top-left">Source code on: <a href={"https://github.com/mathiastj/corona-graphs"}>Github</a></div>
+        <div className="Top-right">Sources: ECDC via <a href={endpoint}>OWID</a> under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></div>
         <header className="App-header">
-          <div style={{width: '40%'}}>
-            <Select options={countries || initialCountries} onChange={input => this._onChange(input)} defaultValue={initialCountrySelect} styles={customStyles} value={country}/>
+          <div style={{width: '75%'}}>
+            <Select isMulti options={selectableCountries} onChange={input => this._onChange(input)} defaultValue={initialCountries} styles={customStyles} value={currentCountries}/>
           </div>
-          <div style={{width: '95%', height: '80%'}}>
-            <CoronaChart dataPoints={dataForCountry} /> 
+          <div style={{width: '95%', height: '90%'}}>
+            <CoronaChart dataPoints={multiCountryData} countries={currentCountries.map(country => country.value)}/> 
           </div>
         </header>
-        <div className="Bottom-right">Sources: ECDC via <a href={endpoint}>OWID</a> under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></div>
       </div>
     );
   }

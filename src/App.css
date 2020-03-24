@@ -17,23 +17,41 @@
   background-color: #282c34;
   min-height: 100vh;
   display: flex;
+  margin-top: 1rem;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   font-size: calc(10px + 2vmin);
   color: white;
+  margin-top: 3rem;
 }
 
 .App-link {
   color: #61dafb;
 }
 
-.Bottom-right {
-  position: fixed;
-  bottom: 1rem;
+.Top-left {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  font-size: calc(10px + 0.5vmin);
+  color: white;
+}
+
+.Top-right {
+  position: absolute;
+  top: 1rem;
   right: 1rem;
   font-size: calc(10px + 0.5vmin);
   color: white;
+}
+
+.Legend-country {
+  font-size: 1.5rem;
+}
+
+.Legend-per-country {
+  font-size: 1rem;
 }
 
 @keyframes App-logo-spin {

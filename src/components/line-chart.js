@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { setDifference } from "../utils/set-diff";
 import {
   Legend,
   Label,
@@ -12,18 +13,68 @@ import {
   YAxis
 } from "recharts";
 
-const prioritizedDataKeys = ['totalCases', 'newCases', 'totalDeaths','newDeaths']
+const distinguishableColors = [
+  '#FFFFFF', 
+  '#F0A3FF',
+  '#0075DC',
+  '#993F00',
+  '#005C31',
+  '#2BCE48',
+  '#FFCC99',
+  '#808080',
+  '#94FFB5',
+  '#8F7C00',
+  '#9DCC00',
+  '#C20088',
+  '#FFA405',
+  '#FFA8BB',
+  '#426600',
+  '#FF0010',
+  '#5EF1F2',
+  '#00998F',
+  '#E0FF66',
+  '#740AFF',
+  '#990000',
+  '#FFFF80',
+  '#FFFF00',
+  '#FF5005'
+]
+
+const calcPrioritizedKeys = (dataPoints, countries) => {
+  const maxPerDataKey = {}
+  for (const country of countries) {
+    maxPerDataKey[`newCases${country}`] = 0
+    maxPerDataKey[`totalCases${country}`] = 0
+    maxPerDataKey[`totalDeaths${country}`] = 0
+    maxPerDataKey[`newDeaths${country}`] = 0
+    for (const entry of dataPoints) {
+      if (entry[`newCases${country}`] > maxPerDataKey[`newCases${country}`]) {
+        maxPerDataKey[`newCases${country}`] = entry[`newCases${country}`]
+      }
+      if (entry[`totalCases${country}`] > maxPerDataKey[`totalCases${country}`]) {
+        maxPerDataKey[`totalCases${country}`] = entry[`totalCases${country}`]
+      }
+      if (entry[`totalDeaths${country}`] > maxPerDataKey[`totalDeaths${country}`]) {
+        maxPerDataKey[`totalDeaths${country}`] = entry[`totalDeaths${country}`]
+      }
+      if (entry[`newDeaths${country}`] > maxPerDataKey[`newDeaths${country}`]) {
+        maxPerDataKey[`newDeaths${country}`] = entry[`newDeaths${country}`]
+      }
+    }
+  }
+  const sortedKeys = Object.keys(maxPerDataKey).map(key => {
+    return {key, value: maxPerDataKey[key]}
+  // Sort descending on value
+  }).sort((a, b) => {
+    return b.value - a.value
+  })
+  return sortedKeys.map(sorted => sorted.key)
+}
 
 class CoronaChart extends Component {
   constructor(props) {
-    super(props)
-    this.state = { disabled: ['totalCases', 'totalDeaths'], chartLines: [
-      { dataKey: 'newCases', color: '#ff7300', label: 'Daily cases'},
-      { dataKey: 'newDeaths', color: '#ffff00', label: 'Daily deaths'},
-      { dataKey: 'totalCases', color: '#ff00ff', label: 'Total cases'},
-      { dataKey: 'totalDeaths', color: '#34c3eb', label: 'Total Deaths'}
-    ],
-    scale: 'linear'}
+    super(props) 
+    this.state = {scale: 'linear'}
   }
 
   handleClick(dataKey) {
@@ -42,26 +93,38 @@ class CoronaChart extends Component {
     this.forceUpdate()
   }
 
-
-
   renderCustomizedLegend = ({ payload }) => {
+    let currentCountry = ''
+    let countryHeader = null
     return (
-      <div className="customized-legend" style={{marginBottom: 30}}>
+      <div className="customized-legend" style={{marginBottom: 40}}>
         {payload.map(entry => {
+          if (currentCountry !== entry.country) {
+            currentCountry = entry.country
+            countryHeader = 
+            <span className="Legend-country">
+              <br/>
+              {entry.country}
+              <br/>
+            </span>
+          } else {
+            countryHeader = null
+          }
           const { dataKey, color, label } = entry;
           const active = this.state.disabled.includes(dataKey);
           const style = {
             marginRight: 10,
-            color: active ? "#000" : "#AAA"
+            color: active ? "#000" : "#AAA",
           };
 
           return (
+           <span>
+            {countryHeader}
             <span
-              className="legend-item"
               onClick={() => this.handleClick(dataKey)}
               style={style}
             >
-              <Surface width={20} height={20}>
+              <Surface width={20} height={20} style={{marginBottom: -4}}>
                 <Symbols cx={10} cy={10} type="circle" size={50} fill={color} />
                 {active && (
                   <Symbols
@@ -73,21 +136,77 @@ class CoronaChart extends Component {
                   />
                 )}
               </Surface>
-              <span>{label}</span>
+              <span className="Legend-per-country">{label}</span>
             </span>
+            </span> 
           );
         })}
       </div>
     );
   };
 
+  static getDerivedStateFromProps(props, state) {
+    const { dataPoints, countries } = props
+    if (!dataPoints || state.prevCountries === countries) {
+      return null
+    }
+
+    if (state.prevCountries) {
+      const prev = new Set(state.prevCountries)
+      const current = new Set(countries)
+  
+      const removedCountries = setDifference(prev, current)
+      // Push the old used colors back into the available pool
+      // Remove chartLines if country no longer selected
+      for (let i = state.chartLines.length - 1; i >= 0; i--) {
+        if (removedCountries.has(state.chartLines[i].country)) {
+          distinguishableColors.push(state.chartLines[i].color)
+          state.chartLines.splice(state.chartLines.indexOf(state.chartLines[i]), 1)
+        }
+      }
+
+      // Remove disabled lengends if country no longer selected
+      for (let i = state.disabled.length - 1; i >= 0; i--) {
+        let removed = false
+        for (const removedCountry of removedCountries) {
+          if (state.disabled[i].includes(removedCountry)) {
+            removed = true
+          }
+        }
+        if (removed) {
+          state.disabled.splice(state.disabled.indexOf(state.disabled[i]), 1)
+        }
+      }
+    }
+    
+    const chartLines = state.chartLines || []
+    const disabled = state.disabled || []
+    for (const country of countries) {
+      if (!state.prevCountries || (state.prevCountries && !state.prevCountries.includes(country))) {
+        chartLines.push({ country, dataKey: `newCases${country}`, color: distinguishableColors.pop(), label: `New cases`})
+        chartLines.push({ country, dataKey: `newDeaths${country}`, color: distinguishableColors.pop(), label: `New deaths`})
+        chartLines.push({ country, dataKey: `totalCases${country}`, color: distinguishableColors.pop(), label: `Total cases`})
+        chartLines.push({ country, dataKey: `totalDeaths${country}`, color: distinguishableColors.pop(), label: `Total deaths`})
+        disabled.push(`totalCases${country}`)
+        disabled.push(`totalDeaths${country}`)
+      }
+    }
+
+    const yLabelPrioritizedKeys = calcPrioritizedKeys(dataPoints, countries)
+
+    return {
+      chartLines, disabled, prevCountries: countries, yLabelPrioritizedKeys
+    }
+  }
+
+
   render() {
-    const { dataPoints } = this.props;
+    const { dataPoints } = this.props
 
     if (!dataPoints) {
       return null;
     }
-
+    
     const data = dataPoints
 
     return (
@@ -120,6 +239,7 @@ class CoronaChart extends Component {
               dataKey={chartLine.dataKey}
               stroke={chartLine.color}
               yAxisId={0}
+              dot={{r: 2}}
               />
               )
             }
@@ -132,7 +252,7 @@ class CoronaChart extends Component {
             />
 
           <YAxis
-            dataKey={prioritizedDataKeys.filter(dataKey => !this.state.disabled.includes(dataKey))[0]}
+            dataKey={this.state.yLabelPrioritizedKeys.filter(dataKey => !this.state.disabled.includes(dataKey))[0]}
             domain={this.state.scale === 'log' ? [1, 'dataMax'] : [0, 'dataMax']}
             tick={{ fontSize: 20 }}
             width={40}
@@ -153,7 +273,7 @@ class CoronaChart extends Component {
             contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.8)" }}
             labelStyle={{ fontWeight: "bold", color: "#666666" }}
             />
-          <Legend verticalAlign="top" height={45} content={this.renderCustomizedLegend} 
+          <Legend wrapperStyle={{top: 550}} align='center' height={100} content={this.renderCustomizedLegend} 
             payload={this.state.chartLines}/>
         </LineChart>
       </ResponsiveContainer>
