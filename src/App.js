@@ -128,15 +128,16 @@ class App extends Component {
     const { selectableCountries, currentCountries, multiCountryData } = this.state;
     return (
       <div className="App">
+        <div className="Top-left">Source code on: <a href={"https://github.com/mathiastj/corona-graphs"}>Github</a></div>
+        <div className="Top-right">Sources: ECDC via <a href={endpoint}>OWID</a> under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></div>
         <header className="App-header">
-          <div style={{width: '40%'}}>
+          <div style={{width: '75%'}}>
             <Select isMulti options={selectableCountries} onChange={input => this._onChange(input)} defaultValue={initialCountries} styles={customStyles} value={currentCountries}/>
           </div>
-          <div style={{width: '95%', height: '80%'}}>
+          <div style={{width: '95%', height: '90%'}}>
             <CoronaChart dataPoints={multiCountryData} countries={currentCountries.map(country => country.value)}/> 
           </div>
         </header>
-        <div className="Bottom-right">Sources: ECDC via <a href={endpoint}>OWID</a> under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></div>
       </div>
     );
   }

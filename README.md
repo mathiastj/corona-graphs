@@ -7,7 +7,9 @@ https://mathiastj.github.io/corona-graphs
 ## Features
 
 - Toggle between countries
+- Compare multiple countries
 - Toggle legends on and off
+- Toggle linear and log scale
 
 ### Sources
 

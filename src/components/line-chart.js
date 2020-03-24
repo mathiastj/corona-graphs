@@ -14,12 +14,10 @@ import {
 } from "recharts";
 
 const distinguishableColors = [
-  '#FFFFFF',
+  '#FFFFFF', 
   '#F0A3FF',
   '#0075DC',
   '#993F00',
-  '#4C005C',
-  '#191919',
   '#005C31',
   '#2BCE48',
   '#FFCC99',
@@ -28,7 +26,6 @@ const distinguishableColors = [
   '#8F7C00',
   '#9DCC00',
   '#C20088',
-  '#003380',
   '#FFA405',
   '#FFA8BB',
   '#426600',
@@ -96,27 +93,38 @@ class CoronaChart extends Component {
     this.forceUpdate()
   }
 
-
-
   renderCustomizedLegend = ({ payload }) => {
+    let currentCountry = ''
+    let countryHeader = null
     return (
-      <div className="customized-legend" style={{marginBottom: 30}}>
+      <div className="customized-legend" style={{marginBottom: 40}}>
         {payload.map(entry => {
+          if (currentCountry !== entry.country) {
+            currentCountry = entry.country
+            countryHeader = 
+            <span className="Legend-country">
+              <br/>
+              {entry.country}
+              <br/>
+            </span>
+          } else {
+            countryHeader = null
+          }
           const { dataKey, color, label } = entry;
           const active = this.state.disabled.includes(dataKey);
           const style = {
             marginRight: 10,
             color: active ? "#000" : "#AAA",
-            fontSize: '1.5rem'
           };
 
           return (
+           <span>
+            {countryHeader}
             <span
-              className="legend-item"
               onClick={() => this.handleClick(dataKey)}
               style={style}
             >
-              <Surface width={20} height={20}>
+              <Surface width={20} height={20} style={{marginBottom: -4}}>
                 <Symbols cx={10} cy={10} type="circle" size={50} fill={color} />
                 {active && (
                   <Symbols
@@ -128,8 +136,9 @@ class CoronaChart extends Component {
                   />
                 )}
               </Surface>
-              <span>{label}</span>
+              <span className="Legend-per-country">{label}</span>
             </span>
+            </span> 
           );
         })}
       </div>
@@ -174,10 +183,10 @@ class CoronaChart extends Component {
     const disabled = state.disabled || []
     for (const country of countries) {
       if (!state.prevCountries || (state.prevCountries && !state.prevCountries.includes(country))) {
-        chartLines.push({ country, dataKey: `newCases${country}`, color: distinguishableColors.pop(), label: `${country} new cases`})
-        chartLines.push({ country, dataKey: `newDeaths${country}`, color: distinguishableColors.pop(), label: `${country} new deaths`})
-        chartLines.push({ country, dataKey: `totalCases${country}`, color: distinguishableColors.pop(), label: `${country} total cases`})
-        chartLines.push({ country, dataKey: `totalDeaths${country}`, color: distinguishableColors.pop(), label: `${country} total deaths`})
+        chartLines.push({ country, dataKey: `newCases${country}`, color: distinguishableColors.pop(), label: `New cases`})
+        chartLines.push({ country, dataKey: `newDeaths${country}`, color: distinguishableColors.pop(), label: `New deaths`})
+        chartLines.push({ country, dataKey: `totalCases${country}`, color: distinguishableColors.pop(), label: `Total cases`})
+        chartLines.push({ country, dataKey: `totalDeaths${country}`, color: distinguishableColors.pop(), label: `Total deaths`})
         disabled.push(`totalCases${country}`)
         disabled.push(`totalDeaths${country}`)
       }
@@ -264,7 +273,7 @@ class CoronaChart extends Component {
             contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.8)" }}
             labelStyle={{ fontWeight: "bold", color: "#666666" }}
             />
-          <Legend verticalAlign="bottom" height={45} content={this.renderCustomizedLegend} 
+          <Legend wrapperStyle={{top: 550}} align='center' height={100} content={this.renderCustomizedLegend} 
             payload={this.state.chartLines}/>
         </LineChart>
       </ResponsiveContainer>
