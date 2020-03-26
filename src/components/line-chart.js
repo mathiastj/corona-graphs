@@ -124,7 +124,7 @@ class CoronaChart extends Component {
               onClick={() => this.handleClick(dataKey)}
               style={style}
             >
-              <Surface width={20} height={20} style={{marginBottom: -4}}>
+              <Surface width={20} height={20} style={{marginBottom: -5}}>
                 <Symbols cx={10} cy={10} type="circle" size={50} fill={color} />
               </Surface>
               <input type="checkbox" checked={!inActive}/>
@@ -226,7 +226,7 @@ class CoronaChart extends Component {
             this.state.chartLines.filter(chartLine => !this.state.disabled.includes(chartLine.dataKey)).map(chartLine =>
               <Line
               connectNulls
-              name={chartLine.label}
+              name={`${chartLine.country} ${chartLine.label.toLowerCase()}`}
               type="monotone"
               dataKey={chartLine.dataKey}
               stroke={chartLine.color}
@@ -256,7 +256,8 @@ class CoronaChart extends Component {
           />
           </YAxis>
           <Tooltip
-            formatter={(value, name) => (value === null) ? 0 : value}
+            formatter={(value) => (value === null) ? 0 : value}
+            itemSorter={(item) => -item.value}
             filterNull={false}
             wrapperStyle={{
               borderColor: "white",
