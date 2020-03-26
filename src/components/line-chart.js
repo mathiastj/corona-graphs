@@ -111,10 +111,10 @@ class CoronaChart extends Component {
             countryHeader = null
           }
           const { dataKey, color, label } = entry;
-          const active = this.state.disabled.includes(dataKey);
+          const inActive = this.state.disabled.includes(dataKey);
           const style = {
             marginRight: 10,
-            color: active ? "#000" : "#AAA",
+            color: "#AAA",
           };
 
           return (
@@ -126,16 +126,8 @@ class CoronaChart extends Component {
             >
               <Surface width={20} height={20} style={{marginBottom: -4}}>
                 <Symbols cx={10} cy={10} type="circle" size={50} fill={color} />
-                {active && (
-                  <Symbols
-                    cx={10}
-                    cy={10}
-                    type="circle"
-                    size={25}
-                    fill={"#FFF"}
-                  />
-                )}
               </Surface>
+              <input type="checkbox" checked={!inActive}/>
               <span className="Legend-per-country">{label}</span>
             </span>
             </span> 
