@@ -7,12 +7,19 @@ import { formatStringToNumberOrNull } from "./utils/data-format";
 import Select from 'react-select';
 
 const endpoint = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/full_data.csv";
+const locationsEndpoint = "https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/locations.csv";
 const initialCountries = [{value: 'Italy', label: 'Italy'}, {value: 'Spain', label: 'Spain'}]
 
-const parseData = (input) => {
+const parseData = (input, locations) => {
   const newExtraction = {}
   const countries = {}
   const dataPerLine = String(input).split('\n')
+  const locationLines = String(locations).split('\n')
+  const popDict = {} 
+  locationLines.splice(1, locationLines.length).forEach((row, idx, _) => {
+      const [, location,,, population] = row.split(',')
+      popDict[location] = population
+  })
   let header = true
   const firstDataPointPerPlace = {}
   for (const line of dataPerLine) {
@@ -24,6 +31,7 @@ const parseData = (input) => {
     if (!place) {
       continue
     }
+    const popData = popDict[place]
     countries[place] = true
     if (!firstDataPointPerPlace[place]) {
       if (Number(newCases) === 0 &&
@@ -42,15 +50,17 @@ const parseData = (input) => {
         [`newCases${place}`]: formatStringToNumberOrNull(newCases),
         [`newDeaths${place}`]: formatStringToNumberOrNull(newDeaths),
         [`totalCases${place}`]: formatStringToNumberOrNull(totalCases), 
-        [`totalDeaths${place}`]: formatStringToNumberOrNull(totalDeaths)
+        [`totalDeaths${place}`]: formatStringToNumberOrNull(totalDeaths),
+        [`popData${place}`]: formatStringToNumberOrNull(popData),
       }
     } else {
       const currentData = newExtraction[dateFormatted]
       newExtraction[dateFormatted] = {
         [`newCases${place}`]: formatStringToNumberOrNull(newCases),
         [`newDeaths${place}`]: formatStringToNumberOrNull(newDeaths),
-        [`totalCases${place}`]: formatStringToNumberOrNull(totalCases), 
-        [`totalDeaths${place}`]: formatStringToNumberOrNull(totalDeaths), 
+        [`totalCases${place}`]: formatStringToNumberOrNull(totalCases),
+        [`totalDeaths${place}`]: formatStringToNumberOrNull(totalDeaths),
+        [`popData${place}`]: formatStringToNumberOrNull(popData),
         ...currentData
       }
     }
@@ -97,10 +107,23 @@ class App extends Component {
         if (includeDataPointsGoingForward) {
           const filteredDataPoint = {}
           for (const country of countries) {
-            filteredDataPoint[`newCases${country.value}`] = dataPoint[`newCases${country.value}`] || null
-            filteredDataPoint[`newDeaths${country.value}`] = dataPoint[`newDeaths${country.value}`] || null
-            filteredDataPoint[`totalCases${country.value}`] = dataPoint[`totalCases${country.value}`] || null
-            filteredDataPoint[`totalDeaths${country.value}`] = dataPoint[`totalDeaths${country.value}`] || null
+            const newCases = dataPoint[`newCases${country.value}`] || null
+            const newDeaths = dataPoint[`newDeaths${country.value}`] || null
+            const totalCases = dataPoint[`totalCases${country.value}`] || null
+            const totalDeaths = dataPoint[`totalDeaths${country.value}`] || null
+            filteredDataPoint[`newCases${country.value}`] = newCases
+            filteredDataPoint[`newDeaths${country.value}`] = newDeaths
+            filteredDataPoint[`totalCases${country.value}`] = totalCases
+            filteredDataPoint[`totalDeaths${country.value}`] = totalDeaths
+
+            const popData = dataPoint[`popData${country.value}`] || null
+            console.log(`popdata for ${country.value} is ${popData}`)
+
+            const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map((value) => value / popData)
+            filteredDataPoint[`newCases${country.value}PerCapita`] = nc
+            filteredDataPoint[`newDeaths${country.value}PerCapita`] = nd
+            filteredDataPoint[`totalCases${country.value}PerCapita`] = tc
+            filteredDataPoint[`totalDeaths${country.value}PerCapita`] = td
           }
           filteredDataPoint['date'] = dataPoint['date']
           multiData.push(filteredDataPoint)
@@ -114,7 +137,8 @@ class App extends Component {
 
   async componentDidMount() {
     const res = await axios.get(`${endpoint}`);
-    const [parsed, countries] = parseData(res.data)
+    const locations = await axios.get(`${locationsEndpoint}`)
+    const [parsed, countries] = parseData(res.data, locations.data)
     const labels = countries.map(key => ({value: key, label: key}))
     this.setState({selectableCountries: labels, newParsedData: parsed})
     await this.getData(initialCountries);

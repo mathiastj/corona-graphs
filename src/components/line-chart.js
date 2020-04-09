@@ -47,18 +47,28 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
     maxPerDataKey[`totalCases${country}`] = 0
     maxPerDataKey[`totalDeaths${country}`] = 0
     maxPerDataKey[`newDeaths${country}`] = 0
+    
+    maxPerDataKey[`newCases${country}PerCapita`] = 0
+    maxPerDataKey[`totalCases${country}PerCapita`] = 0
+    maxPerDataKey[`totalDeaths${country}PerCapita`] = 0
+    maxPerDataKey[`newDeaths${country}PerCapita`] = 0
+
     for (const entry of dataPoints) {
       if (entry[`newCases${country}`] > maxPerDataKey[`newCases${country}`]) {
         maxPerDataKey[`newCases${country}`] = entry[`newCases${country}`]
+        maxPerDataKey[`newCases${country}PerCapita`] = entry[`newCases${country}PerCapita`]
       }
       if (entry[`totalCases${country}`] > maxPerDataKey[`totalCases${country}`]) {
         maxPerDataKey[`totalCases${country}`] = entry[`totalCases${country}`]
+        maxPerDataKey[`totalCases${country}PerCapita`] = entry[`totalCases${country}PerCapita`]
       }
       if (entry[`totalDeaths${country}`] > maxPerDataKey[`totalDeaths${country}`]) {
         maxPerDataKey[`totalDeaths${country}`] = entry[`totalDeaths${country}`]
+        maxPerDataKey[`totalDeaths${country}PerCapita`] = entry[`totalDeaths${country}PerCapita`]
       }
       if (entry[`newDeaths${country}`] > maxPerDataKey[`newDeaths${country}`]) {
         maxPerDataKey[`newDeaths${country}`] = entry[`newDeaths${country}`]
+        maxPerDataKey[`newDeaths${country}PerCapita`] = entry[`newDeaths${country}$PerCapita`]
       }
     }
   }
@@ -74,7 +84,7 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
 class CoronaChart extends Component {
   constructor(props) {
     super(props) 
-    this.state = {scale: 'linear'}
+    this.state = {scale: 'linear', perCapita: true}
   }
 
   handleClick(dataKey) {
@@ -89,6 +99,13 @@ class CoronaChart extends Component {
   handleOptionChange(scale) {
     this.setState({
       scale
+    });
+    this.forceUpdate()
+  }
+
+  handlePerCapitaChange(perCapita) {
+    this.setState({
+      perCapita
     });
     this.forceUpdate()
   }
@@ -200,6 +217,7 @@ class CoronaChart extends Component {
     }
     
     const data = dataPoints
+    const perCapita = (this.state.perCapita ? 'PerCapita' : '')
 
     return (
       <div>
@@ -213,6 +231,11 @@ class CoronaChart extends Component {
             onClick={() => this.handleOptionChange("log")}>
             <input type="radio" id="log" name="scale" value="log" checked={this.state.scale === 'log'}/>
             <span style={{color: "#AAA"}}>Log</span>
+          </span>
+          <span
+            onClick={() => this.handlePerCapitaChange(!this.state.perCapita)}>
+            <input type="checkbox" id="perCapita" name="perCapita" checked={this.state.perCapita}/>
+            <span style={{color: "#AAA"}}>Per Capita</span>
           </span>
         </div>
       <ResponsiveContainer height={800} className="chart-container">
@@ -228,7 +251,7 @@ class CoronaChart extends Component {
               connectNulls
               name={`${chartLine.country} ${chartLine.label.toLowerCase()}`}
               type="monotone"
-              dataKey={chartLine.dataKey}
+              dataKey={`${chartLine.dataKey}${perCapita}`}
               stroke={chartLine.color}
               yAxisId={0}
               dot={{r: 2}}
@@ -244,7 +267,7 @@ class CoronaChart extends Component {
             />
 
           <YAxis
-            dataKey={this.state.yLabelPrioritizedKeys.filter(dataKey => !this.state.disabled.includes(dataKey))[0]}
+            dataKey={`${this.state.yLabelPrioritizedKeys.filter(dataKey => !this.state.disabled.includes(dataKey))[0]}${perCapita}`}
             domain={this.state.scale === 'log' ? [1, 'dataMax'] : [0, 'dataMax']}
             tick={{ fontSize: 20 }}
             width={40}
