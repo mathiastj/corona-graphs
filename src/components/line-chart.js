@@ -252,21 +252,23 @@ class CoronaChart extends Component {
 
     return (
       <div>
-        <div style={{width: '80%'}}>
-          <span
-            onClick={() => this.handleOptionChange("linear")}>
-            <input type="radio" id="linear" name="scale" value="linear" checked={this.state.scale === 'linear'} />
-            <span style={{color: "#AAA"}}>Linear</span>
+        <div style={{width: '85%', display: 'inline-block'}}>
+          <span style={{float:'left', 'margin-left': '1rem'}}>
+            <span
+              onClick={() => this.handleOptionChange("linear")}>
+              <input type="radio" id="linear" name="scale" value="linear" checked={this.state.scale === 'linear'} />
+              <span style={{color: "#AAA"}}>Linear</span>
+            </span>
+            <span
+              onClick={() => this.handleOptionChange("log")}>
+              <input type="radio" id="log" name="scale" value="log" checked={this.state.scale === 'log'}/>
+              <span style={{color: "#AAA"}}>Log</span>
+            </span>
           </span>
-          <span
-            onClick={() => this.handleOptionChange("log")}>
-            <input type="radio" id="log" name="scale" value="log" checked={this.state.scale === 'log'}/>
-            <span style={{color: "#AAA"}}>Log</span>
-          </span>
-          <span style={{float:'right'}}
+          <span style={{float:'right', 'margin-right': '1rem'}}
             onClick={() => this.handlePerCapitaChange(!this.state.perCapita)}>
             <input type="checkbox" id="perCapita" name="perCapita" checked={this.state.perCapita}/>
-            <span style={{color: "#AAA"}}>Per Capita</span>
+            <span style={{color: "#AAA"}}>Per Million Capita</span>
           </span>
         </div>
       <ResponsiveContainer height={800} className="chart-container">
