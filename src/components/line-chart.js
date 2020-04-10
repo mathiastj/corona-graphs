@@ -312,7 +312,7 @@ class CoronaChart extends Component {
           />
           </YAxis>
           <Tooltip
-            formatter={(value) => (value === null) ? 0 : value}
+            formatter={(value, name) => [(value === null) ? 0 : value, `${name} ${this.state.perCapita ? 'per million capita' : ''}`]}
             itemSorter={(item) => -item.value}
             filterNull={false}
             wrapperStyle={{
