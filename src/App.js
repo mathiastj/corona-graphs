@@ -118,7 +118,8 @@ class App extends Component {
 
             const popData = dataPoint[`popData${country.value}`] || null
 
-            const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map((value) => value / popData * 1000000)
+            // Get data per million capita and use very hackish way to round floats
+            const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map((value) => Number(Number(value / popData * 1000000).toFixed(2)))
             filteredDataPoint[`newCases${country.value}PerCapita`] = nc
             filteredDataPoint[`newDeaths${country.value}PerCapita`] = nd
             filteredDataPoint[`totalCases${country.value}PerCapita`] = tc
