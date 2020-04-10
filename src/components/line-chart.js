@@ -208,6 +208,34 @@ class CoronaChart extends Component {
     }
   }
 
+  getMaxNonDisabled = () => {
+    for (const key of this.state.yLabelPrioritizedKeys) {
+      // Filter out keys based on perCapita choice
+      if (this.state.perCapita) {
+        if (!key.includes('PerCapita')) {
+          continue
+        }
+      } else {
+        if (key.includes('PerCapita')) {
+          continue
+        }
+      }
+      // Find the first non disabled key
+      let disabled = false
+      for (const disabledKey of this.state.disabled) {
+        // Use includes since to catch the perCapita keys, e.g. newCasesSpainPerCapita would still match 'newCasesSpain'
+        if (key.includes(disabledKey)) {
+          disabled = true
+          break
+        }
+      }
+      if (!disabled) {
+        return key
+      }
+    }
+    return ''
+  }
+
 
   render() {
     const { dataPoints } = this.props
@@ -220,29 +248,7 @@ class CoronaChart extends Component {
     const perCapita = (this.state.perCapita ? 'PerCapita' : '')
 
     // Figure out which of the currently enabled keys is the first in the yLabelPrioritizedKeys list (including whether they are PerCapita keys)
-    let yAxisMaxKey = ''
-    for (const key of this.state.yLabelPrioritizedKeys) {
-      if (this.state.perCapita) {
-        if (!key.includes('PerCapita')) {
-          continue
-        }
-      } else {
-        if (key.includes('PerCapita')) {
-          continue
-        }
-      }
-      let disabled = false
-      for (const disabledKey of this.state.disabled) {
-        if (key.includes(disabledKey)) {
-          disabled = true
-          break
-        }
-      }
-      if (!disabled) {
-        yAxisMaxKey = key
-        break
-      }
-    }
+    let yAxisMaxKey = this.getMaxNonDisabled()
 
     return (
       <div>
