@@ -135,8 +135,7 @@ class App extends Component {
   }
 
   async componentDidMount() {
-    const res = await axios.get(`${endpoint}`);
-    const locations = await axios.get(`${locationsEndpoint}`)
+    const [res, locations] = await Promise.all([axios.get(`${endpoint}`), axios.get(`${locationsEndpoint}`)])
     const [parsed, countries] = parseData(res.data, locations.data)
     const labels = countries.map(key => ({value: key, label: key}))
     this.setState({selectableCountries: labels, newParsedData: parsed})
