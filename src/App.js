@@ -117,9 +117,8 @@ class App extends Component {
             filteredDataPoint[`totalDeaths${country.value}`] = totalDeaths
 
             const popData = dataPoint[`popData${country.value}`] || null
-            console.log(`popdata for ${country.value} is ${popData}`)
 
-            const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map((value) => value / popData)
+            const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map((value) => value / popData * 1000000)
             filteredDataPoint[`newCases${country.value}PerCapita`] = nc
             filteredDataPoint[`newDeaths${country.value}PerCapita`] = nd
             filteredDataPoint[`totalCases${country.value}PerCapita`] = tc

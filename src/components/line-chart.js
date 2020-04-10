@@ -68,7 +68,7 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
       }
       if (entry[`newDeaths${country}`] > maxPerDataKey[`newDeaths${country}`]) {
         maxPerDataKey[`newDeaths${country}`] = entry[`newDeaths${country}`]
-        maxPerDataKey[`newDeaths${country}PerCapita`] = entry[`newDeaths${country}$PerCapita`]
+        maxPerDataKey[`newDeaths${country}PerCapita`] = entry[`newDeaths${country}PerCapita`]
       }
     }
   }
@@ -78,6 +78,7 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
   }).sort((a, b) => {
     return b.value - a.value
   })
+  console.log(sortedKeys)
   return sortedKeys.map(sorted => sorted.key)
 }
 
@@ -219,9 +220,34 @@ class CoronaChart extends Component {
     const data = dataPoints
     const perCapita = (this.state.perCapita ? 'PerCapita' : '')
 
+    // Figure out which of the currently enabled keys is the first in the yLabelPrioritizedKeys list (including whether they are PerCapita keys)
+    let yAxisMaxKey = ''
+    for (const key of this.state.yLabelPrioritizedKeys) {
+      if (this.state.perCapita) {
+        if (!key.includes('PerCapita')) {
+          continue
+        }
+      } else {
+        if (key.includes('PerCapita')) {
+          continue
+        }
+      }
+      let disabled = false
+      for (const disabledKey of this.state.disabled) {
+        if (key.includes(disabledKey)) {
+          disabled = true
+          break
+        }
+      }
+      if (!disabled) {
+        yAxisMaxKey = key
+        break
+      }
+    }
+
     return (
       <div>
-        <div>
+        <div style={{width: '80%'}}>
           <span
             onClick={() => this.handleOptionChange("linear")}>
             <input type="radio" id="linear" name="scale" value="linear" checked={this.state.scale === 'linear'} />
@@ -232,7 +258,7 @@ class CoronaChart extends Component {
             <input type="radio" id="log" name="scale" value="log" checked={this.state.scale === 'log'}/>
             <span style={{color: "#AAA"}}>Log</span>
           </span>
-          <span
+          <span style={{float:'right'}}
             onClick={() => this.handlePerCapitaChange(!this.state.perCapita)}>
             <input type="checkbox" id="perCapita" name="perCapita" checked={this.state.perCapita}/>
             <span style={{color: "#AAA"}}>Per Capita</span>
@@ -267,7 +293,7 @@ class CoronaChart extends Component {
             />
 
           <YAxis
-            dataKey={`${this.state.yLabelPrioritizedKeys.filter(dataKey => !this.state.disabled.includes(dataKey))[0]}${perCapita}`}
+            dataKey={yAxisMaxKey}
             domain={this.state.scale === 'log' ? [1, 'dataMax'] : [0, 'dataMax']}
             tick={{ fontSize: 20 }}
             width={40}
