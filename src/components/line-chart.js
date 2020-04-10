@@ -47,18 +47,28 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
     maxPerDataKey[`totalCases${country}`] = 0
     maxPerDataKey[`totalDeaths${country}`] = 0
     maxPerDataKey[`newDeaths${country}`] = 0
+    
+    maxPerDataKey[`newCases${country}PerCapita`] = 0
+    maxPerDataKey[`totalCases${country}PerCapita`] = 0
+    maxPerDataKey[`totalDeaths${country}PerCapita`] = 0
+    maxPerDataKey[`newDeaths${country}PerCapita`] = 0
+
     for (const entry of dataPoints) {
       if (entry[`newCases${country}`] > maxPerDataKey[`newCases${country}`]) {
         maxPerDataKey[`newCases${country}`] = entry[`newCases${country}`]
+        maxPerDataKey[`newCases${country}PerCapita`] = entry[`newCases${country}PerCapita`]
       }
       if (entry[`totalCases${country}`] > maxPerDataKey[`totalCases${country}`]) {
         maxPerDataKey[`totalCases${country}`] = entry[`totalCases${country}`]
+        maxPerDataKey[`totalCases${country}PerCapita`] = entry[`totalCases${country}PerCapita`]
       }
       if (entry[`totalDeaths${country}`] > maxPerDataKey[`totalDeaths${country}`]) {
         maxPerDataKey[`totalDeaths${country}`] = entry[`totalDeaths${country}`]
+        maxPerDataKey[`totalDeaths${country}PerCapita`] = entry[`totalDeaths${country}PerCapita`]
       }
       if (entry[`newDeaths${country}`] > maxPerDataKey[`newDeaths${country}`]) {
         maxPerDataKey[`newDeaths${country}`] = entry[`newDeaths${country}`]
+        maxPerDataKey[`newDeaths${country}PerCapita`] = entry[`newDeaths${country}PerCapita`]
       }
     }
   }
@@ -74,7 +84,7 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
 class CoronaChart extends Component {
   constructor(props) {
     super(props) 
-    this.state = {scale: 'linear'}
+    this.state = {scale: 'linear', perCapita: false}
   }
 
   handleClick(dataKey) {
@@ -89,6 +99,13 @@ class CoronaChart extends Component {
   handleOptionChange(scale) {
     this.setState({
       scale
+    });
+    this.forceUpdate()
+  }
+
+  handlePerCapitaChange(perCapita) {
+    this.setState({
+      perCapita
     });
     this.forceUpdate()
   }
@@ -191,6 +208,34 @@ class CoronaChart extends Component {
     }
   }
 
+  getMaxNonDisabled = () => {
+    for (const key of this.state.yLabelPrioritizedKeys) {
+      // Filter out keys based on perCapita choice
+      if (this.state.perCapita) {
+        if (!key.includes('PerCapita')) {
+          continue
+        }
+      } else {
+        if (key.includes('PerCapita')) {
+          continue
+        }
+      }
+      // Find the first non disabled key
+      let disabled = false
+      for (const disabledKey of this.state.disabled) {
+        // Use includes since to catch the perCapita keys, e.g. newCasesSpainPerCapita would still match 'newCasesSpain'
+        if (key.includes(disabledKey)) {
+          disabled = true
+          break
+        }
+      }
+      if (!disabled) {
+        return key
+      }
+    }
+    return ''
+  }
+
 
   render() {
     const { dataPoints } = this.props
@@ -200,19 +245,30 @@ class CoronaChart extends Component {
     }
     
     const data = dataPoints
+    const perCapita = (this.state.perCapita ? 'PerCapita' : '')
+
+    // Figure out which of the currently enabled keys is the first in the yLabelPrioritizedKeys list (including whether they are PerCapita keys)
+    let yAxisMaxKey = this.getMaxNonDisabled()
 
     return (
       <div>
-        <div>
-          <span
-            onClick={() => this.handleOptionChange("linear")}>
-            <input type="radio" id="linear" name="scale" value="linear" checked={this.state.scale === 'linear'} />
-            <span style={{color: "#AAA"}}>Linear</span>
+        <div style={{width: '85%', display: 'inline-block'}}>
+          <span style={{float:'left', 'margin-left': '1rem'}}>
+            <span
+              onClick={() => this.handleOptionChange("linear")}>
+              <input type="radio" id="linear" name="scale" value="linear" checked={this.state.scale === 'linear'} />
+              <span style={{color: "#AAA"}}>Linear</span>
+            </span>
+            <span
+              onClick={() => this.handleOptionChange("log")}>
+              <input type="radio" id="log" name="scale" value="log" checked={this.state.scale === 'log'}/>
+              <span style={{color: "#AAA"}}>Log</span>
+            </span>
           </span>
-          <span
-            onClick={() => this.handleOptionChange("log")}>
-            <input type="radio" id="log" name="scale" value="log" checked={this.state.scale === 'log'}/>
-            <span style={{color: "#AAA"}}>Log</span>
+          <span style={{float:'right', 'margin-right': '1rem'}}
+            onClick={() => this.handlePerCapitaChange(!this.state.perCapita)}>
+            <input type="checkbox" id="perCapita" name="perCapita" checked={this.state.perCapita}/>
+            <span style={{color: "#AAA"}}>Per Million Capita</span>
           </span>
         </div>
       <ResponsiveContainer height={800} className="chart-container">
@@ -228,7 +284,7 @@ class CoronaChart extends Component {
               connectNulls
               name={`${chartLine.country} ${chartLine.label.toLowerCase()}`}
               type="monotone"
-              dataKey={chartLine.dataKey}
+              dataKey={`${chartLine.dataKey}${perCapita}`}
               stroke={chartLine.color}
               yAxisId={0}
               dot={{r: 2}}
@@ -244,7 +300,7 @@ class CoronaChart extends Component {
             />
 
           <YAxis
-            dataKey={this.state.yLabelPrioritizedKeys.filter(dataKey => !this.state.disabled.includes(dataKey))[0]}
+            dataKey={yAxisMaxKey}
             domain={this.state.scale === 'log' ? [1, 'dataMax'] : [0, 'dataMax']}
             tick={{ fontSize: 20 }}
             width={40}
@@ -256,7 +312,7 @@ class CoronaChart extends Component {
           />
           </YAxis>
           <Tooltip
-            formatter={(value) => (value === null) ? 0 : value}
+            formatter={(value, name) => [(value === null) ? 0 : value, `${name} ${this.state.perCapita ? 'per million capita' : ''}`]}
             itemSorter={(item) => -item.value}
             filterNull={false}
             wrapperStyle={{
