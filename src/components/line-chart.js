@@ -85,7 +85,7 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
 class CoronaChart extends Component {
   constructor(props) {
     super(props) 
-    this.state = {scale: 'linear', perCapita: true}
+    this.state = {scale: 'linear', perCapita: false}
   }
 
   handleClick(dataKey) {
