@@ -78,7 +78,6 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
   }).sort((a, b) => {
     return b.value - a.value
   })
-  console.log(sortedKeys)
   return sortedKeys.map(sorted => sorted.key)
 }
 
