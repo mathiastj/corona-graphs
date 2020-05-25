@@ -5,6 +5,7 @@ import Select from 'react-select'
 import CoronaChart from './components/line-chart'
 import { formatStringToNumberOrNull } from './utils/data-format'
 
+const WORLD_POP = 7794798729
 const endpoint = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/full_data.csv'
 const locationsEndpoint = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/locations.csv'
 const initialCountries = [
@@ -126,7 +127,11 @@ class App extends Component {
             filteredDataPoint[`totalCases${country.value}`] = totalCases
             filteredDataPoint[`totalDeaths${country.value}`] = totalDeaths
 
-            const popData = dataPoint[`popData${country.value}`] || null
+            let popData = dataPoint[`popData${country.value}`] || null
+            // Hardcode world population since it's not in the source
+            if (!popData && country.value === 'World') {
+              popData = WORLD_POP
+            }
 
             // Get data per million capita and use very hackish way to round floats
             const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map((value) =>
@@ -173,6 +178,7 @@ class App extends Component {
             />
           </div>
           <div style={{ width: '95%', height: '90%' }}>
+            {!multiCountryData && "Loading..."}
             <CoronaChart dataPoints={multiCountryData} countries={currentCountries.map((country) => country.value)} />
           </div>
         </header>
