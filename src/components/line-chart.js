@@ -282,7 +282,7 @@ class CoronaChart extends Component {
           </span>
         </div>
         <ResponsiveContainer height={800} className="chart-container">
-          <LineChart width={800} height={800} data={data} margin={{ top: 25, right: 25, left: 40, bottom: 25 }}>
+          <LineChart width={800} height={800} data={data} margin={{ top: 25, right: 25, left: 25, bottom: 25 }}>
             {this.state.chartLines
               .filter((chartLine) => !this.state.disabled.includes(chartLine.dataKey))
               .map((chartLine) => (
@@ -307,14 +307,13 @@ class CoronaChart extends Component {
             <YAxis
               dataKey={yAxisMaxKey}
               domain={this.state.scale === 'log' ? [1, 'dataMax'] : [0, 'dataMax']}
-              tick={{ fontSize: 20 }}
+              tick={{ angle: -45, fontSize: 15 }}
               width={40}
               scale={this.state.scale}
               allowDataOverflow
               padding={{ top: 3, bottom: 3 }}
             >
               {/* <Label value="Persons" angle={-90} position="insideBottomLeft" offset={1} style={{ fontSize: '80%', fill: 'rgba(0, 204, 102, 0.70)' }}></Label> */}
-              />
             </YAxis>
             <Tooltip
               formatter={(value, name) => [
