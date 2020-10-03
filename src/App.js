@@ -13,6 +13,8 @@ const initialCountries = [
   { value: 'Spain', label: 'Spain' },
 ]
 
+const ROLLING_AVERAGE_DAYS = 7
+
 const parseData = (input, locations) => {
   const newExtraction = {}
   const countries = {}
@@ -99,52 +101,105 @@ class App extends Component {
   }
 
   async getData(countries) {
-    if (!countries) {
-      this.setState({ currentCountries: [], multiCountryData: null })
+    if (!countries || countries.length === 0) {
+      this.setState({ currentCountries: [], multiCountryData: [] })
       return
     }
     const newParsed = this.state.newParsedData
     const multiData = []
-    if (countries) {
-      // Build data set with only the selected countries and only after they started getting data
-      let includeDataPointsGoingForward = false
-      for (const dataPoint of Object.values(newParsed)) {
+    // Build data set with only the selected countries and only after they started getting data
+    let includeDataPointsGoingForward = false
+    for (const dataPoint of Object.values(newParsed)) {
+      // Find the first datapoint for any of the countries
+      if (!includeDataPointsGoingForward) {
         for (const country of countries) {
           if (dataPoint[`newCases${country.value}`]) {
             includeDataPointsGoingForward = true
             break
           }
         }
-        if (includeDataPointsGoingForward) {
-          const filteredDataPoint = {}
-          for (const country of countries) {
-            const newCases = dataPoint[`newCases${country.value}`] || null
-            const newDeaths = dataPoint[`newDeaths${country.value}`] || null
-            const totalCases = dataPoint[`totalCases${country.value}`] || null
-            const totalDeaths = dataPoint[`totalDeaths${country.value}`] || null
-            filteredDataPoint[`newCases${country.value}`] = newCases
-            filteredDataPoint[`newDeaths${country.value}`] = newDeaths
-            filteredDataPoint[`totalCases${country.value}`] = totalCases
-            filteredDataPoint[`totalDeaths${country.value}`] = totalDeaths
+      }
+      if (includeDataPointsGoingForward) {
+        const filteredDataPoint = {}
+        let rollingFigures = []
+        for (const country of countries) {
+          const newCases = dataPoint[`newCases${country.value}`] || null
+          const newDeaths = dataPoint[`newDeaths${country.value}`] || null
+          const totalCases = dataPoint[`totalCases${country.value}`] || null
+          const totalDeaths = dataPoint[`totalDeaths${country.value}`] || null
+          filteredDataPoint[`newCases${country.value}`] = newCases
+          filteredDataPoint[`newDeaths${country.value}`] = newDeaths
+          filteredDataPoint[`totalCases${country.value}`] = totalCases
+          filteredDataPoint[`totalDeaths${country.value}`] = totalDeaths
 
-            let popData = dataPoint[`popData${country.value}`] || null
-            // Hardcode world population since it's not in the source
-            if (!popData && country.value === 'World') {
-              popData = WORLD_POP
-            }
-
-            // Get data per million capita and use very hackish way to round floats
-            const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map((value) =>
-              Number(Number((value / popData) * 1000000).toFixed(2))
-            )
-            filteredDataPoint[`newCases${country.value}PerCapita`] = nc
-            filteredDataPoint[`newDeaths${country.value}PerCapita`] = nd
-            filteredDataPoint[`totalCases${country.value}PerCapita`] = tc
-            filteredDataPoint[`totalDeaths${country.value}PerCapita`] = td
+          let popData = dataPoint[`popData${country.value}`] || null
+          // Hardcode world population since it's not in the source
+          if (!popData && country.value === 'World') {
+            popData = WORLD_POP
           }
-          filteredDataPoint.date = dataPoint.date
-          multiData.push(filteredDataPoint)
+
+          // Get data per million capita and use very hackish way to round floats
+          const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map((value) =>
+            Number(Number((value / popData) * 1000000).toFixed(2))
+          )
+          filteredDataPoint[`newCases${country.value}PerCapita`] = nc
+          filteredDataPoint[`newDeaths${country.value}PerCapita`] = nd
+          filteredDataPoint[`totalCases${country.value}PerCapita`] = tc
+          filteredDataPoint[`totalDeaths${country.value}PerCapita`] = td
+
+          // Create a seven day rolling average for the daily stats
+          rollingFigures.push(
+            {
+              useDataKey: `newCases${country.value}`,
+              newDataKey: `newCases${country.value}Rolling`,
+              sum: 0,
+              entries: 0,
+              dataToday: newCases,
+            },
+            {
+              useDataKey: `newDeaths${country.value}`,
+              newDataKey: `newDeaths${country.value}Rolling`,
+              sum: 0,
+              entries: 0,
+              dataToday: newDeaths,
+            },
+            {
+              useDataKey: `newCases${country.value}PerCapita`,
+              newDataKey: `newCases${country.value}RollingPerCapita`,
+              sum: 0,
+              entries: 0,
+              dataToday: nc,
+            },
+            {
+              useDataKey: `newDeaths${country.value}PerCapita`,
+              newDataKey: `newDeaths${country.value}RollingPerCapita`,
+              sum: 0,
+              entries: 0,
+              dataToday: nd,
+            }
+          )
+          if (multiData.length >= ROLLING_AVERAGE_DAYS - 1) {
+            for (const rollingFigure of rollingFigures) {
+              // Go six days back and add current
+              for (let i = 0; i < ROLLING_AVERAGE_DAYS - 1; i++) {
+                let dailyStat = multiData[multiData.length - i - 1][rollingFigure.useDataKey]
+                if (dailyStat && !isNaN(dailyStat)) {
+                  rollingFigure.sum += dailyStat
+                  rollingFigure.entries += 1
+                }
+              }
+              if (rollingFigure.dataToday && !isNaN(rollingFigure.dataToday)) {
+                rollingFigure.sum += rollingFigure.dataToday
+                rollingFigure.entries += 1
+              }
+
+              // Get the average and round to float
+              filteredDataPoint[rollingFigure.newDataKey] = Number(rollingFigure.sum / rollingFigure.entries).toFixed(2)
+            }
+          }
         }
+        filteredDataPoint.date = dataPoint.date
+        multiData.push(filteredDataPoint)
       }
     }
 
@@ -157,6 +212,7 @@ class App extends Component {
 
   render() {
     const { selectableCountries, currentCountries, multiCountryData } = this.state
+    console.log(multiCountryData)
     return (
       <div className="App">
         <div className="Top-left">
@@ -178,7 +234,7 @@ class App extends Component {
             />
           </div>
           <div style={{ width: '95%', height: '90%' }}>
-            {!multiCountryData && "Loading..."}
+            {!multiCountryData && 'Loading...'}
             <CoronaChart dataPoints={multiCountryData} countries={currentCountries.map((country) => country.value)} />
           </div>
         </header>

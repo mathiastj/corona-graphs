@@ -182,13 +182,13 @@ class CoronaChart extends Component {
       if (!state.prevCountries || (state.prevCountries && !state.prevCountries.includes(country))) {
         chartLines.push({
           country,
-          dataKey: `newCases${country}`,
+          dataKey: `newCases${country}Rolling`,
           color: distinguishableColors.pop(),
           label: `New cases`,
         })
         chartLines.push({
           country,
-          dataKey: `newDeaths${country}`,
+          dataKey: `newDeaths${country}Rolling`,
           color: distinguishableColors.pop(),
           label: `New deaths`,
         })
@@ -314,7 +314,7 @@ class CoronaChart extends Component {
               padding={{ top: 3, bottom: 3 }}
             >
               {/* <Label value="Persons" angle={-90} position="insideBottomLeft" offset={1} style={{ fontSize: '80%', fill: 'rgba(0, 204, 102, 0.70)' }}></Label> */}
-              />
+              {/* /> */}
             </YAxis>
             <Tooltip
               formatter={(value, name) => [
