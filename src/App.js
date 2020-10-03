@@ -43,10 +43,9 @@ const parseData = (input, locations) => {
         firstDataPointPerPlace[place] = true
       }
     }
-    const dateFormatted = new Date(date).toISOString().substring(0, 10)
-    if (!newExtraction[dateFormatted]) {
-      newExtraction[dateFormatted] = {
-        date: dateFormatted,
+    if (!newExtraction[date]) {
+      newExtraction[date] = {
+        date: date,
         [`newCases${place}`]: formatStringToNumberOrNull(newCases),
         [`newDeaths${place}`]: formatStringToNumberOrNull(newDeaths),
         [`totalCases${place}`]: formatStringToNumberOrNull(totalCases),
@@ -54,15 +53,11 @@ const parseData = (input, locations) => {
         [`popData${place}`]: formatStringToNumberOrNull(popData),
       }
     } else {
-      const currentData = newExtraction[dateFormatted]
-      newExtraction[dateFormatted] = {
-        [`newCases${place}`]: formatStringToNumberOrNull(newCases),
-        [`newDeaths${place}`]: formatStringToNumberOrNull(newDeaths),
-        [`totalCases${place}`]: formatStringToNumberOrNull(totalCases),
-        [`totalDeaths${place}`]: formatStringToNumberOrNull(totalDeaths),
-        [`popData${place}`]: formatStringToNumberOrNull(popData),
-        ...currentData,
-      }
+      newExtraction[date][`newCases${place}`] = formatStringToNumberOrNull(newCases)
+      newExtraction[date][`newDeaths${place}`] = formatStringToNumberOrNull(newDeaths)
+      newExtraction[date][`totalCases${place}`] = formatStringToNumberOrNull(totalCases)
+      newExtraction[date][`totalDeaths${place}`] = formatStringToNumberOrNull(totalDeaths)
+      newExtraction[date][`popData${place}`] = formatStringToNumberOrNull(popData)
     }
   }
 
