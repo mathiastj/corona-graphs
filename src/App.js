@@ -3,6 +3,7 @@ import './App.css'
 import axios from 'axios'
 import Select from 'react-select'
 import CoronaChart from './components/line-chart'
+import { DATA_MODIFIERS, DATA_TYPES } from './utils/constants'
 import { formatStringToNumberOrNull } from './utils/data-format'
 
 const WORLD_POP = 7794798729
@@ -12,7 +13,6 @@ const initialCountries = [
   { value: 'Italy', label: 'Italy' },
   { value: 'Spain', label: 'Spain' },
 ]
-
 const ROLLING_AVERAGE_DAYS = 7
 
 const parseData = (input, locations) => {
@@ -48,17 +48,17 @@ const parseData = (input, locations) => {
     if (!newExtraction[date]) {
       newExtraction[date] = {
         date: date,
-        [`newCases${place}`]: formatStringToNumberOrNull(newCases),
-        [`newDeaths${place}`]: formatStringToNumberOrNull(newDeaths),
-        [`totalCases${place}`]: formatStringToNumberOrNull(totalCases),
-        [`totalDeaths${place}`]: formatStringToNumberOrNull(totalDeaths),
+        [`${DATA_TYPES.NEW_CASES}${place}`]: formatStringToNumberOrNull(newCases),
+        [`${DATA_TYPES.NEW_DEATHS}${place}`]: formatStringToNumberOrNull(newDeaths),
+        [`${DATA_TYPES.TOTAL_CASES}${place}`]: formatStringToNumberOrNull(totalCases),
+        [`${DATA_TYPES.TOTAL_DEATHS}${place}`]: formatStringToNumberOrNull(totalDeaths),
         [`popData${place}`]: formatStringToNumberOrNull(popData),
       }
     } else {
-      newExtraction[date][`newCases${place}`] = formatStringToNumberOrNull(newCases)
-      newExtraction[date][`newDeaths${place}`] = formatStringToNumberOrNull(newDeaths)
-      newExtraction[date][`totalCases${place}`] = formatStringToNumberOrNull(totalCases)
-      newExtraction[date][`totalDeaths${place}`] = formatStringToNumberOrNull(totalDeaths)
+      newExtraction[date][`${DATA_TYPES.NEW_CASES}${place}`] = formatStringToNumberOrNull(newCases)
+      newExtraction[date][`${DATA_TYPES.NEW_DEATHS}${place}`] = formatStringToNumberOrNull(newDeaths)
+      newExtraction[date][`${DATA_TYPES.TOTAL_CASES}${place}`] = formatStringToNumberOrNull(totalCases)
+      newExtraction[date][`${DATA_TYPES.TOTAL_DEATHS}${place}`] = formatStringToNumberOrNull(totalDeaths)
       newExtraction[date][`popData${place}`] = formatStringToNumberOrNull(popData)
     }
   }
@@ -75,29 +75,29 @@ const parseData = (input, locations) => {
 const addRollingAverages = (country, newCases, newDeaths, nc, nd, multiData, filteredDataPoint) => {
   let rollingFigures = [
     {
-      useDataKey: `newCases${country.value}`,
-      newDataKey: `newCases${country.value}Rolling`,
+      useDataKey: `${DATA_TYPES.NEW_CASES}${country.value}`,
+      newDataKey: `${DATA_TYPES.NEW_CASES}${country.value}${DATA_MODIFIERS.ROLLING}`,
       sum: 0,
       entries: 0,
       dataToday: newCases,
     },
     {
-      useDataKey: `newDeaths${country.value}`,
-      newDataKey: `newDeaths${country.value}Rolling`,
+      useDataKey: `${DATA_TYPES.NEW_DEATHS}${country.value}`,
+      newDataKey: `${DATA_TYPES.NEW_DEATHS}${country.value}${DATA_MODIFIERS.ROLLING}`,
       sum: 0,
       entries: 0,
       dataToday: newDeaths,
     },
     {
-      useDataKey: `newCases${country.value}PerCapita`,
-      newDataKey: `newCases${country.value}PerCapitaRolling`,
+      useDataKey: `${DATA_TYPES.NEW_CASES}${country.value}${DATA_MODIFIERS.PER_CAPITA}`,
+      newDataKey: `${DATA_TYPES.NEW_CASES}${country.value}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`,
       sum: 0,
       entries: 0,
       dataToday: nc,
     },
     {
-      useDataKey: `newDeaths${country.value}PerCapita`,
-      newDataKey: `newDeaths${country.value}PerCapitaRolling`,
+      useDataKey: `${DATA_TYPES.NEW_DEATHS}${country.value}${DATA_MODIFIERS.PER_CAPITA}`,
+      newDataKey: `${DATA_TYPES.NEW_DEATHS}${country.value}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`,
       sum: 0,
       entries: 0,
       dataToday: nd,
@@ -162,7 +162,7 @@ class App extends Component {
       // Find the first datapoint for any of the countries
       if (!includeDataPointsGoingForward) {
         for (const country of countries) {
-          if (dataPoint[`newCases${country.value}`]) {
+          if (dataPoint[`${DATA_TYPES.NEW_CASES}${country.value}`]) {
             includeDataPointsGoingForward = true
             break
           }
@@ -170,16 +170,15 @@ class App extends Component {
       }
       if (includeDataPointsGoingForward) {
         const filteredDataPoint = {}
-        let rollingFigures = []
         for (const country of countries) {
-          const newCases = dataPoint[`newCases${country.value}`] || null
-          const newDeaths = dataPoint[`newDeaths${country.value}`] || null
-          const totalCases = dataPoint[`totalCases${country.value}`] || null
-          const totalDeaths = dataPoint[`totalDeaths${country.value}`] || null
-          filteredDataPoint[`newCases${country.value}`] = newCases
-          filteredDataPoint[`newDeaths${country.value}`] = newDeaths
-          filteredDataPoint[`totalCases${country.value}`] = totalCases
-          filteredDataPoint[`totalDeaths${country.value}`] = totalDeaths
+          const newCases = dataPoint[`${DATA_TYPES.NEW_CASES}${country.value}`] || null
+          const newDeaths = dataPoint[`${DATA_TYPES.NEW_DEATHS}${country.value}`] || null
+          const totalCases = dataPoint[`${DATA_TYPES.TOTAL_CASES}${country.value}`] || null
+          const totalDeaths = dataPoint[`${DATA_TYPES.TOTAL_DEATHS}${country.value}`] || null
+          filteredDataPoint[`${DATA_TYPES.NEW_CASES}${country.value}`] = newCases
+          filteredDataPoint[`${DATA_TYPES.NEW_DEATHS}${country.value}`] = newDeaths
+          filteredDataPoint[`${DATA_TYPES.TOTAL_CASES}${country.value}`] = totalCases
+          filteredDataPoint[`${DATA_TYPES.TOTAL_DEATHS}${country.value}`] = totalDeaths
 
           let popData = dataPoint[`popData${country.value}`] || null
           // Hardcode world population since it's not in the source
@@ -191,10 +190,10 @@ class App extends Component {
           const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map(
             (value) => Number(Number((value / popData) * 1000000).toFixed(2)) || null
           )
-          filteredDataPoint[`newCases${country.value}PerCapita`] = nc
-          filteredDataPoint[`newDeaths${country.value}PerCapita`] = nd
-          filteredDataPoint[`totalCases${country.value}PerCapita`] = tc
-          filteredDataPoint[`totalDeaths${country.value}PerCapita`] = td
+          filteredDataPoint[`${DATA_TYPES.NEW_CASES}${country.value}${DATA_MODIFIERS.PER_CAPITA}`] = nc
+          filteredDataPoint[`${DATA_TYPES.NEW_DEATHS}${country.value}${DATA_MODIFIERS.PER_CAPITA}`] = nd
+          filteredDataPoint[`${DATA_TYPES.TOTAL_CASES}${country.value}${DATA_MODIFIERS.PER_CAPITA}`] = tc
+          filteredDataPoint[`${DATA_TYPES.TOTAL_DEATHS}${country.value}${DATA_MODIFIERS.PER_CAPITA}`] = td
 
           addRollingAverages(country, newCases, newDeaths, nc, nd, multiData, filteredDataPoint)
         }

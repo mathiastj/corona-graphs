@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { setDifference } from '../utils/set-diff'
+import { DATA_MODIFIERS, DATA_TYPES } from '../utils/constants'
 import { Legend, Label, Line, LineChart, ResponsiveContainer, Surface, Symbols, Tooltip, XAxis, YAxis } from 'recharts'
 
 const distinguishableColors = [
@@ -32,45 +33,59 @@ const distinguishableColors = [
 const calcPrioritizedKeys = (dataPoints, countries) => {
   const maxPerDataKey = {}
   for (const country of countries) {
-    maxPerDataKey[`newCases${country}`] = 0
-    maxPerDataKey[`totalCases${country}`] = 0
-    maxPerDataKey[`totalDeaths${country}`] = 0
-    maxPerDataKey[`newDeaths${country}`] = 0
+    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}`] = 0
+    maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}`] = 0
+    maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}`] = 0
+    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}`] = 0
 
-    maxPerDataKey[`newCases${country}PerCapita`] = 0
-    maxPerDataKey[`totalCases${country}PerCapita`] = 0
-    maxPerDataKey[`totalDeaths${country}PerCapita`] = 0
-    maxPerDataKey[`newDeaths${country}PerCapita`] = 0
+    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
+    maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
+    maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
+    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
 
-    maxPerDataKey[`newCases${country}Rolling`] = 0
-    maxPerDataKey[`newDeaths${country}Rolling`] = 0
-    maxPerDataKey[`newCases${country}PerCapitaRolling`] = 0
-    maxPerDataKey[`newDeaths${country}PerCapitaRolling`] = 0
+    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`] = 0
+    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`] = 0
+    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] = 0
+    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] = 0
 
     for (const entry of dataPoints) {
-      if (entry[`newCases${country}`] > maxPerDataKey[`newCases${country}`]) {
-        maxPerDataKey[`newCases${country}`] = entry[`newCases${country}`]
-        maxPerDataKey[`newCases${country}PerCapita`] = entry[`newCases${country}PerCapita`]
+      if (entry[`${DATA_TYPES.NEW_CASES}${country}`] > maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}`]) {
+        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}`] = entry[`${DATA_TYPES.NEW_CASES}${country}`]
+        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
+          entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`]
       }
-      if (entry[`totalCases${country}`] > maxPerDataKey[`totalCases${country}`]) {
-        maxPerDataKey[`totalCases${country}`] = entry[`totalCases${country}`]
-        maxPerDataKey[`totalCases${country}PerCapita`] = entry[`totalCases${country}PerCapita`]
+      if (entry[`${DATA_TYPES.TOTAL_CASES}${country}`] > maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}`]) {
+        maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}`] = entry[`${DATA_TYPES.TOTAL_CASES}${country}`]
+        maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
+          entry[`${DATA_TYPES.TOTAL_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`]
       }
-      if (entry[`totalDeaths${country}`] > maxPerDataKey[`totalDeaths${country}`]) {
-        maxPerDataKey[`totalDeaths${country}`] = entry[`totalDeaths${country}`]
-        maxPerDataKey[`totalDeaths${country}PerCapita`] = entry[`totalDeaths${country}PerCapita`]
+      if (entry[`${DATA_TYPES.TOTAL_DEATHS}${country}`] > maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}`]) {
+        maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}`] = entry[`${DATA_TYPES.TOTAL_DEATHS}${country}`]
+        maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
+          entry[`${DATA_TYPES.TOTAL_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`]
       }
-      if (entry[`newDeaths${country}`] > maxPerDataKey[`newDeaths${country}`]) {
-        maxPerDataKey[`newDeaths${country}`] = entry[`newDeaths${country}`]
-        maxPerDataKey[`newDeaths${country}PerCapita`] = entry[`newDeaths${country}PerCapita`]
+      if (entry[`${DATA_TYPES.NEW_DEATHS}${country}`] > maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}`]) {
+        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}`] = entry[`${DATA_TYPES.NEW_DEATHS}${country}`]
+        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
+          entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`]
       }
-      if (entry[`newDeaths${country}Rolling`] > maxPerDataKey[`newDeaths${country}Rolling`]) {
-        maxPerDataKey[`newDeaths${country}Rolling`] = entry[`newDeaths${country}Rolling`]
-        maxPerDataKey[`newDeaths${country}PerCapitaRolling`] = entry[`newDeaths${country}PerCapitaRolling`]
+      if (
+        entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`] >
+        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`]
+      ) {
+        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`] =
+          entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`]
+        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] =
+          entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`]
       }
-      if (entry[`newCases${country}Rolling`] > maxPerDataKey[`newCases${country}Rolling`]) {
-        maxPerDataKey[`newCases${country}Rolling`] = entry[`newCases${country}Rolling`]
-        maxPerDataKey[`newCases${country}PerCapitaRolling`] = entry[`newCases${country}PerCapitaRolling`]
+      if (
+        entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`] >
+        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`]
+      ) {
+        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`] =
+          entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`]
+        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] =
+          entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`]
       }
     }
   }
@@ -201,30 +216,30 @@ class CoronaChart extends Component {
       if (!state.prevCountries || (state.prevCountries && !state.prevCountries.includes(country))) {
         chartLines.push({
           country,
-          dataKey: `newCases${country}`,
+          dataKey: `${DATA_TYPES.NEW_CASES}${country}`,
           color: distinguishableColors.pop(),
           label: `New cases`,
         })
         chartLines.push({
           country,
-          dataKey: `newDeaths${country}`,
+          dataKey: `${DATA_TYPES.NEW_DEATHS}${country}`,
           color: distinguishableColors.pop(),
           label: `New deaths`,
         })
         chartLines.push({
           country,
-          dataKey: `totalCases${country}`,
+          dataKey: `${DATA_TYPES.TOTAL_CASES}${country}`,
           color: distinguishableColors.pop(),
           label: `Total cases`,
         })
         chartLines.push({
           country,
-          dataKey: `totalDeaths${country}`,
+          dataKey: `${DATA_TYPES.TOTAL_DEATHS}${country}`,
           color: distinguishableColors.pop(),
           label: `Total deaths`,
         })
-        disabled.push(`totalCases${country}`)
-        disabled.push(`totalDeaths${country}`)
+        disabled.push(`${DATA_TYPES.TOTAL_CASES}${country}`)
+        disabled.push(`${DATA_TYPES.TOTAL_DEATHS}${country}`)
       }
     }
 
@@ -242,19 +257,25 @@ class CoronaChart extends Component {
     for (const key of this.state.yLabelPrioritizedKeys) {
       // Filter out keys based on perCapita and rollingAverage choice
       if (!this.state.perCapita && !this.state.rollingAverage) {
-        if (key.includes('PerCapita') || key.includes('Rolling')) {
+        if (key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) || key.includes(`${DATA_MODIFIERS.ROLLING}`)) {
           continue
         }
       } else if (this.state.perCapita && this.state.rollingAverage) {
-        if (!(key.includes('total') && key.includes('PerCapita')) && !key.includes('PerCapitaRolling')) {
+        if (
+          !(key.includes(`total`) && key.includes(`${DATA_MODIFIERS.PER_CAPITA}`)) &&
+          !key.includes(`${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`)
+        ) {
           continue
         }
       } else if (!this.state.perCapita && this.state.rollingAverage) {
-        if (key.includes('PerCapita') || (key.includes('new') && !key.includes('Rolling'))) {
+        if (
+          key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) ||
+          (key.includes(`new`) && !key.includes(`${DATA_MODIFIERS.ROLLING}`))
+        ) {
           continue
         }
       } else if (this.state.perCapita && !this.state.rollingAverage) {
-        if (!key.includes('PerCapita') || key.includes('Rolling')) {
+        if (!key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) || key.includes(`${DATA_MODIFIERS.ROLLING}`)) {
           continue
         }
       }
@@ -282,8 +303,8 @@ class CoronaChart extends Component {
     }
 
     const data = dataPoints
-    const perCapita = this.state.perCapita ? 'PerCapita' : ''
-    const rollingAverage = this.state.rollingAverage ? 'Rolling' : ''
+    const perCapita = this.state.perCapita ? `${DATA_MODIFIERS.PER_CAPITA}` : ''
+    const rollingAverage = this.state.rollingAverage ? `${DATA_MODIFIERS.ROLLING}` : ''
 
     // Set the minimum y axis value based on log/linear and whether perCapita is enabled
     let yAxisDomain = [0, 'dataMax']
