@@ -11,6 +11,7 @@ https://mathiastj.github.io/corona-graphs
 - Toggle legends on and off
 - Toggle linear and log scale
 - Toogle per million capita
+- Toggle 7 day rolling average for the daily stats i.e. new cases and new deaths
 
 ### Sources
 
