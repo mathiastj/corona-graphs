@@ -45,10 +45,9 @@ const parseData = (input, locations) => {
         firstDataPointPerPlace[place] = true
       }
     }
-    const dateFormatted = new Date(date).toISOString().substring(0, 10)
-    if (!newExtraction[dateFormatted]) {
-      newExtraction[dateFormatted] = {
-        date: dateFormatted,
+    if (!newExtraction[date]) {
+      newExtraction[date] = {
+        date: date,
         [`newCases${place}`]: formatStringToNumberOrNull(newCases),
         [`newDeaths${place}`]: formatStringToNumberOrNull(newDeaths),
         [`totalCases${place}`]: formatStringToNumberOrNull(totalCases),
@@ -56,15 +55,11 @@ const parseData = (input, locations) => {
         [`popData${place}`]: formatStringToNumberOrNull(popData),
       }
     } else {
-      const currentData = newExtraction[dateFormatted]
-      newExtraction[dateFormatted] = {
-        [`newCases${place}`]: formatStringToNumberOrNull(newCases),
-        [`newDeaths${place}`]: formatStringToNumberOrNull(newDeaths),
-        [`totalCases${place}`]: formatStringToNumberOrNull(totalCases),
-        [`totalDeaths${place}`]: formatStringToNumberOrNull(totalDeaths),
-        [`popData${place}`]: formatStringToNumberOrNull(popData),
-        ...currentData,
-      }
+      newExtraction[date][`newCases${place}`] = formatStringToNumberOrNull(newCases)
+      newExtraction[date][`newDeaths${place}`] = formatStringToNumberOrNull(newDeaths)
+      newExtraction[date][`totalCases${place}`] = formatStringToNumberOrNull(totalCases)
+      newExtraction[date][`totalDeaths${place}`] = formatStringToNumberOrNull(totalDeaths)
+      newExtraction[date][`popData${place}`] = formatStringToNumberOrNull(popData)
     }
   }
 
@@ -74,6 +69,60 @@ const parseData = (input, locations) => {
   })
 
   return [dataPoints, Object.keys(countries)]
+}
+
+// Create a seven day rolling average for the daily stats
+const addRollingAverages = (country, newCases, newDeaths, nc, nd, multiData, filteredDataPoint) => {
+  let rollingFigures = [
+    {
+      useDataKey: `newCases${country.value}`,
+      newDataKey: `newCases${country.value}Rolling`,
+      sum: 0,
+      entries: 0,
+      dataToday: newCases,
+    },
+    {
+      useDataKey: `newDeaths${country.value}`,
+      newDataKey: `newDeaths${country.value}Rolling`,
+      sum: 0,
+      entries: 0,
+      dataToday: newDeaths,
+    },
+    {
+      useDataKey: `newCases${country.value}PerCapita`,
+      newDataKey: `newCases${country.value}PerCapitaRolling`,
+      sum: 0,
+      entries: 0,
+      dataToday: nc,
+    },
+    {
+      useDataKey: `newDeaths${country.value}PerCapita`,
+      newDataKey: `newDeaths${country.value}PerCapitaRolling`,
+      sum: 0,
+      entries: 0,
+      dataToday: nd,
+    },
+  ]
+  // Make sure there's enough data for a rolling average
+  if (multiData.length >= ROLLING_AVERAGE_DAYS - 1) {
+    for (const rollingFigure of rollingFigures) {
+      // Go six days back and add current
+      for (let i = 0; i < ROLLING_AVERAGE_DAYS - 1; i++) {
+        let dailyStat = multiData[multiData.length - i - 1][rollingFigure.useDataKey]
+        if (dailyStat != null && !isNaN(dailyStat)) {
+          rollingFigure.sum += dailyStat
+          rollingFigure.entries += 1
+        }
+      }
+      if (rollingFigure.dataToday && !isNaN(rollingFigure.dataToday)) {
+        rollingFigure.sum += rollingFigure.dataToday
+        rollingFigure.entries += 1
+      }
+
+      // Get the average and round to float
+      filteredDataPoint[rollingFigure.newDataKey] = Number(Number(rollingFigure.sum / rollingFigure.entries).toFixed(2))
+    }
+  }
 }
 
 const customStyles = {
@@ -139,64 +188,15 @@ class App extends Component {
           }
 
           // Get data per million capita and use very hackish way to round floats
-          const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map((value) =>
-            Number(Number((value / popData) * 1000000).toFixed(2))
+          const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map(
+            (value) => Number(Number((value / popData) * 1000000).toFixed(2)) || null
           )
           filteredDataPoint[`newCases${country.value}PerCapita`] = nc
           filteredDataPoint[`newDeaths${country.value}PerCapita`] = nd
           filteredDataPoint[`totalCases${country.value}PerCapita`] = tc
           filteredDataPoint[`totalDeaths${country.value}PerCapita`] = td
 
-          // Create a seven day rolling average for the daily stats
-          rollingFigures.push(
-            {
-              useDataKey: `newCases${country.value}`,
-              newDataKey: `newCases${country.value}Rolling`,
-              sum: 0,
-              entries: 0,
-              dataToday: newCases,
-            },
-            {
-              useDataKey: `newDeaths${country.value}`,
-              newDataKey: `newDeaths${country.value}Rolling`,
-              sum: 0,
-              entries: 0,
-              dataToday: newDeaths,
-            },
-            {
-              useDataKey: `newCases${country.value}PerCapita`,
-              newDataKey: `newCases${country.value}RollingPerCapita`,
-              sum: 0,
-              entries: 0,
-              dataToday: nc,
-            },
-            {
-              useDataKey: `newDeaths${country.value}PerCapita`,
-              newDataKey: `newDeaths${country.value}RollingPerCapita`,
-              sum: 0,
-              entries: 0,
-              dataToday: nd,
-            }
-          )
-          if (multiData.length >= ROLLING_AVERAGE_DAYS - 1) {
-            for (const rollingFigure of rollingFigures) {
-              // Go six days back and add current
-              for (let i = 0; i < ROLLING_AVERAGE_DAYS - 1; i++) {
-                let dailyStat = multiData[multiData.length - i - 1][rollingFigure.useDataKey]
-                if (dailyStat && !isNaN(dailyStat)) {
-                  rollingFigure.sum += dailyStat
-                  rollingFigure.entries += 1
-                }
-              }
-              if (rollingFigure.dataToday && !isNaN(rollingFigure.dataToday)) {
-                rollingFigure.sum += rollingFigure.dataToday
-                rollingFigure.entries += 1
-              }
-
-              // Get the average and round to float
-              filteredDataPoint[rollingFigure.newDataKey] = Number(rollingFigure.sum / rollingFigure.entries).toFixed(2)
-            }
-          }
+          addRollingAverages(country, newCases, newDeaths, nc, nd, multiData, filteredDataPoint)
         }
         filteredDataPoint.date = dataPoint.date
         multiData.push(filteredDataPoint)
@@ -233,7 +233,7 @@ class App extends Component {
               value={currentCountries}
             />
           </div>
-          <div style={{ width: '95%', height: '90%' }}>
+          <div style={{ width: '99%', height: '90%' }}>
             {!multiCountryData && 'Loading...'}
             <CoronaChart dataPoints={multiCountryData} countries={currentCountries.map((country) => country.value)} />
           </div>
