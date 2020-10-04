@@ -285,6 +285,14 @@ class CoronaChart extends Component {
     const perCapita = this.state.perCapita ? 'PerCapita' : ''
     const rollingAverage = this.state.rollingAverage ? 'Rolling' : ''
 
+    // Set the minimum y axis value based on log/linear and whether perCapita is enabled
+    let yAxisDomain = [0, 'dataMax']
+    if (this.state.scale === 'log' && this.state.perCapita) {
+      yAxisDomain = [0.01, 'dataMax']
+    } else if (this.state.scale === 'log' && !this.state.perCapita) {
+      yAxisDomain = [1, 'dataMax']
+    }
+
     // Figure out which of the currently enabled keys is the first in the yLabelPrioritizedKeys list (including whether they are PerCapita or Rolling keys)
     let yAxisMaxKey = this.getMaxNonDisabled()
 
@@ -345,7 +353,7 @@ class CoronaChart extends Component {
 
             <YAxis
               dataKey={yAxisMaxKey}
-              domain={this.state.scale === 'log' ? [1, 'dataMax'] : [0, 'dataMax']}
+              domain={yAxisDomain}
               tick={{ angle: -45, fontSize: 15 }}
               width={40}
               scale={this.state.scale}
