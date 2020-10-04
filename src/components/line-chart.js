@@ -42,6 +42,11 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
     maxPerDataKey[`totalDeaths${country}PerCapita`] = 0
     maxPerDataKey[`newDeaths${country}PerCapita`] = 0
 
+    maxPerDataKey[`newCases${country}Rolling`] = 0
+    maxPerDataKey[`newDeaths${country}Rolling`] = 0
+    maxPerDataKey[`newCases${country}PerCapitaRolling`] = 0
+    maxPerDataKey[`newDeaths${country}PerCapitaRolling`] = 0
+
     for (const entry of dataPoints) {
       if (entry[`newCases${country}`] > maxPerDataKey[`newCases${country}`]) {
         maxPerDataKey[`newCases${country}`] = entry[`newCases${country}`]
@@ -59,6 +64,14 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
         maxPerDataKey[`newDeaths${country}`] = entry[`newDeaths${country}`]
         maxPerDataKey[`newDeaths${country}PerCapita`] = entry[`newDeaths${country}PerCapita`]
       }
+      if (entry[`newDeaths${country}Rolling`] > maxPerDataKey[`newDeaths${country}Rolling`]) {
+        maxPerDataKey[`newDeaths${country}Rolling`] = entry[`newDeaths${country}Rolling`]
+        maxPerDataKey[`newDeaths${country}PerCapitaRolling`] = entry[`newDeaths${country}PerCapitaRolling`]
+      }
+      if (entry[`newCases${country}Rolling`] > maxPerDataKey[`newCases${country}Rolling`]) {
+        maxPerDataKey[`newCases${country}Rolling`] = entry[`newCases${country}Rolling`]
+        maxPerDataKey[`newCases${country}PerCapitaRolling`] = entry[`newCases${country}PerCapitaRolling`]
+      }
     }
   }
   const sortedKeys = Object.keys(maxPerDataKey)
@@ -75,7 +88,7 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
 class CoronaChart extends Component {
   constructor(props) {
     super(props)
-    this.state = { scale: 'linear', perCapita: false }
+    this.state = { scale: 'linear', perCapita: false, rollingAverage: false }
   }
 
   handleClick(dataKey) {
@@ -96,6 +109,12 @@ class CoronaChart extends Component {
   handlePerCapitaChange(perCapita) {
     this.setState({
       perCapita,
+    })
+    this.forceUpdate()
+  }
+  handleRollingAverageChange(rollingAverage) {
+    this.setState({
+      rollingAverage,
     })
     this.forceUpdate()
   }
@@ -221,20 +240,28 @@ class CoronaChart extends Component {
 
   getMaxNonDisabled = () => {
     for (const key of this.state.yLabelPrioritizedKeys) {
-      // Filter out keys based on perCapita choice
-      if (this.state.perCapita) {
-        if (!key.includes('PerCapita')) {
+      // Filter out keys based on perCapita and rollingAverage choice
+      if (!this.state.perCapita && !this.state.rollingAverage) {
+        if (key.includes('PerCapita') || key.includes('Rolling')) {
           continue
         }
-      } else {
-        if (key.includes('PerCapita')) {
+      } else if (this.state.perCapita && this.state.rollingAverage) {
+        if (!(key.includes('total') && key.includes('PerCapita')) && !key.includes('PerCapitaRolling')) {
+          continue
+        }
+      } else if (!this.state.perCapita && this.state.rollingAverage) {
+        if (key.includes('PerCapita') || (key.includes('new') && !key.includes('Rolling'))) {
+          continue
+        }
+      } else if (this.state.perCapita && !this.state.rollingAverage) {
+        if (!key.includes('PerCapita') || key.includes('Rolling')) {
           continue
         }
       }
       // Find the first non disabled key
       let disabled = false
       for (const disabledKey of this.state.disabled) {
-        // Use includes since to catch the perCapita keys, e.g. newCasesSpainPerCapita would still match 'newCasesSpain'
+        // Use includes to also catch the perCapita and rollingAverage keys, e.g. newCasesSpainPerCapita would still match 'newCasesSpain'
         if (key.includes(disabledKey)) {
           disabled = true
           break
@@ -256,8 +283,9 @@ class CoronaChart extends Component {
 
     const data = dataPoints
     const perCapita = this.state.perCapita ? 'PerCapita' : ''
+    const rollingAverage = this.state.rollingAverage ? 'Rolling' : ''
 
-    // Figure out which of the currently enabled keys is the first in the yLabelPrioritizedKeys list (including whether they are PerCapita keys)
+    // Figure out which of the currently enabled keys is the first in the yLabelPrioritizedKeys list (including whether they are PerCapita or Rolling keys)
     let yAxisMaxKey = this.getMaxNonDisabled()
 
     return (
@@ -280,6 +308,13 @@ class CoronaChart extends Component {
             <input type="checkbox" id="perCapita" name="perCapita" checked={this.state.perCapita} />
             <span style={{ color: '#AAA' }}>Per Million Capita</span>
           </span>
+          <span
+            style={{ float: 'right', 'margin-right': '1rem' }}
+            onClick={() => this.handleRollingAverageChange(!this.state.rollingAverage)}
+          >
+            <input type="checkbox" id="rollingAverage" name="rollingAverage" checked={this.state.rollingAverage} />
+            <span style={{ color: '#AAA' }}>7 day rolling average</span>
+          </span>
         </div>
         <ResponsiveContainer height={800} className="chart-container">
           <LineChart width={800} height={800} data={data} margin={{ top: 25, right: 25, left: 25, bottom: 25 }}>
@@ -290,7 +325,11 @@ class CoronaChart extends Component {
                   connectNulls
                   name={`${chartLine.country} ${chartLine.label.toLowerCase()}`}
                   type="monotone"
-                  dataKey={`${chartLine.dataKey}${perCapita}`}
+                  dataKey={
+                    chartLine.dataKey.includes('total')
+                      ? `${chartLine.dataKey}${perCapita}`
+                      : `${chartLine.dataKey}${perCapita}${rollingAverage}`
+                  }
                   stroke={chartLine.color}
                   yAxisId={0}
                   dot={{ r: 2 }}
