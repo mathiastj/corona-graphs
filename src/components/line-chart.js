@@ -353,7 +353,6 @@ class CoronaChart extends Component {
               padding={{ top: 3, bottom: 3 }}
             >
               {/* <Label value="Persons" angle={-90} position="insideBottomLeft" offset={1} style={{ fontSize: '80%', fill: 'rgba(0, 204, 102, 0.70)' }}></Label> */}
-              {/* /> */}
             </YAxis>
             <Tooltip
               formatter={(value, name) => [
