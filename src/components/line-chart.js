@@ -30,6 +30,43 @@ const distinguishableColors = [
   '#FF5005',
 ]
 
+const STANDARD_DISABLED_DATA_TYPES = [DATA_TYPES.TOTAL_CASES, DATA_TYPES.TOTAL_DEATHS]
+
+// If the same data types/legends are disabled for each previous country get those back, otherwise get the regularly disabled keys
+const getCommonDisabledDataTypes = (prevCountries, disabled) => {
+  let commonDisabledDataTypes = []
+  const numberOfPreviousCountries = prevCountries ? prevCountries.length : 0
+  if (numberOfPreviousCountries === 0) {
+    // If there were no countries previously, return the ones that are disabled by default
+    return STANDARD_DISABLED_DATA_TYPES
+  }
+
+  const disabledCount = {
+    [DATA_TYPES.NEW_CASES]: 0,
+    [DATA_TYPES.NEW_DEATHS]: 0,
+    [DATA_TYPES.TOTAL_CASES]: 0,
+    [DATA_TYPES.TOTAL_DEATHS]: 0,
+  }
+  // Figure out which data types are disabled
+  for (const disabledDataType of disabled) {
+    for (const disabledDataTypeCount of Object.keys(disabledCount)) {
+      if (disabledDataType.includes(disabledDataTypeCount)) {
+        disabledCount[disabledDataTypeCount]++
+      }
+    }
+  }
+  // Check whether the same data types are disabled for all the countries
+  for (const [key, value] of Object.entries(disabledCount)) {
+    if (value === numberOfPreviousCountries) {
+      commonDisabledDataTypes.push(key)
+    } else if (value > 0 && value < numberOfPreviousCountries) {
+      // If the disabled data types do not match, overwrite with the ones that are disabled by standard
+      return STANDARD_DISABLED_DATA_TYPES
+    }
+  }
+  return commonDisabledDataTypes
+}
+
 const calcPrioritizedKeys = (dataPoints, countries) => {
   const maxPerDataKey = {}
   for (const country of countries) {
@@ -212,6 +249,10 @@ class CoronaChart extends Component {
 
     const chartLines = state.chartLines || []
     const disabled = state.disabled || []
+
+    // If the same key/legends are disabled for each previous country apply the same disabled keys to newly added counties
+    let commonDisabledKeys = getCommonDisabledDataTypes(state.prevCountries, disabled)
+
     for (const country of countries) {
       if (!state.prevCountries || (state.prevCountries && !state.prevCountries.includes(country))) {
         chartLines.push({
@@ -238,8 +279,9 @@ class CoronaChart extends Component {
           color: distinguishableColors.pop(),
           label: `Total deaths`,
         })
-        disabled.push(`${DATA_TYPES.TOTAL_CASES}${country}`)
-        disabled.push(`${DATA_TYPES.TOTAL_DEATHS}${country}`)
+        for (const key of commonDisabledKeys) {
+          disabled.push(`${key}${country}`)
+        }
       }
     }
 
