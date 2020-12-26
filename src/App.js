@@ -7,7 +7,7 @@ import { DATA_MODIFIERS, DATA_TYPES } from './utils/constants'
 import { formatStringToNumberOrNull } from './utils/data-format'
 
 const WORLD_POP = 7794798729
-const endpoint = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/full_data.csv'
+const endpoint = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv'
 const locationsEndpoint = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/locations.csv'
 const initialCountries = [
   { value: 'Italy', label: 'Italy' },
@@ -32,7 +32,7 @@ const parseData = (input, locations) => {
       header = false
       continue
     }
-    const [date, place, newCases, newDeaths, totalCases, totalDeaths] = line.split(',')
+    const [, , place, date, totalCases, newCases, , totalDeaths, newDeaths] = line.split(',')
     if (!place) {
       continue
     }
