@@ -218,7 +218,7 @@ class App extends Component {
           Source code on: <a href="https://github.com/mathiastj/corona-graphs">GitHub</a>
         </div>
         <div className="Top-right">
-          Sources: ECDC via <a href="https://github.com/owid/covid-19-data">OWID</a> under{' '}
+          Sources: <a href="https://github.com/owid/covid-19-data/tree/master/public/data">OWID</a> under{' '}
           <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
         </div>
         <header className="App-header">
