@@ -4,29 +4,31 @@
     "commonjs": true,
     "es6": true,
     "jest": true,
-    "node": true,
+    "node": true
   },
   "parser": "babel-eslint",
   "extends": ["prettier", "prettier/react"],
   "globals": {
     "Atomics": "readonly",
-    "SharedArrayBuffer": "readonly",
+    "SharedArrayBuffer": "readonly"
   },
   "parserOptions": {
     "ecmaFeatures": {
       "jsx": true,
-      "modules": true,
+      "modules": true
     },
     "ecmaVersion": 2018,
     "sourceType": "module"
   },
   "settings": {
     "react": {
-      "version": "detect",
-    },
+      "version": "detect"
+    }
   },
   "plugins": ["react", "prettier"],
   "rules": {
+    "react/jsx-uses-react": "error",   
+    "react/jsx-uses-vars": "error",
     "react/prop-types": 0,
     "no-undef": "error",
     "no-unused-vars": "error",
@@ -36,5 +38,5 @@
       "semi": false
     }],
     "curly": "error"
-  },
+  }
 }
