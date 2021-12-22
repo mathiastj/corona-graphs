@@ -67,76 +67,6 @@ const getCommonDisabledDataTypes = (prevCountries, disabled) => {
   return commonDisabledDataTypes
 }
 
-const calcPrioritizedKeys = (dataPoints, countries) => {
-  const maxPerDataKey = {}
-  for (const country of countries) {
-    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}`] = 0
-    maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}`] = 0
-    maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}`] = 0
-    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}`] = 0
-
-    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
-    maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
-    maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
-    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
-
-    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`] = 0
-    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`] = 0
-    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] = 0
-    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] = 0
-
-    for (const entry of dataPoints) {
-      if (entry[`${DATA_TYPES.NEW_CASES}${country}`] > maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}`]) {
-        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}`] = entry[`${DATA_TYPES.NEW_CASES}${country}`]
-        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
-          entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`]
-      }
-      if (entry[`${DATA_TYPES.TOTAL_CASES}${country}`] > maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}`]) {
-        maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}`] = entry[`${DATA_TYPES.TOTAL_CASES}${country}`]
-        maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
-          entry[`${DATA_TYPES.TOTAL_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`]
-      }
-      if (entry[`${DATA_TYPES.TOTAL_DEATHS}${country}`] > maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}`]) {
-        maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}`] = entry[`${DATA_TYPES.TOTAL_DEATHS}${country}`]
-        maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
-          entry[`${DATA_TYPES.TOTAL_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`]
-      }
-      if (entry[`${DATA_TYPES.NEW_DEATHS}${country}`] > maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}`]) {
-        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}`] = entry[`${DATA_TYPES.NEW_DEATHS}${country}`]
-        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
-          entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`]
-      }
-      if (
-        entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`] >
-        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`]
-      ) {
-        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`] =
-          entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`]
-        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] =
-          entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`]
-      }
-      if (
-        entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`] >
-        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`]
-      ) {
-        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`] =
-          entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`]
-        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] =
-          entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`]
-      }
-    }
-  }
-  const sortedKeys = Object.keys(maxPerDataKey)
-    .map((key) => {
-      return { key, value: maxPerDataKey[key] }
-      // Sort descending on value
-    })
-    .sort((a, b) => {
-      return b.value - a.value
-    })
-  return sortedKeys.map((sorted) => sorted.key)
-}
-
 class CoronaChart extends Component {
   constructor(props) {
     super(props)
@@ -296,56 +226,63 @@ class CoronaChart extends Component {
       }
     }
 
-    const yLabelPrioritizedKeys = calcPrioritizedKeys(dataPoints, countries)
-
     return {
       chartLines,
       disabled,
       prevCountries: countries,
-      yLabelPrioritizedKeys,
     }
   }
 
-  getMaxNonDisabled = () => {
-    for (const key of this.state.yLabelPrioritizedKeys) {
-      // Filter out keys based on perCapita and rollingAverage choice
-      if (!this.state.perCapita && !this.state.rollingAverage) {
-        if (key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) || key.includes(`${DATA_MODIFIERS.ROLLING}`)) {
-          continue
-        }
-      } else if (this.state.perCapita && this.state.rollingAverage) {
-        if (
-          !(key.includes(`total`) && key.includes(`${DATA_MODIFIERS.PER_CAPITA}`)) &&
-          !key.includes(`${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`)
-        ) {
-          continue
-        }
-      } else if (!this.state.perCapita && this.state.rollingAverage) {
-        if (
-          key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) ||
-          (key.includes(`new`) && !key.includes(`${DATA_MODIFIERS.ROLLING}`))
-        ) {
-          continue
-        }
-      } else if (this.state.perCapita && !this.state.rollingAverage) {
-        if (!key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) || key.includes(`${DATA_MODIFIERS.ROLLING}`)) {
-          continue
-        }
+  getYAxisMax = (dataPoints) => {
+    const max = {
+      key: '',
+      value: 0,
+    }
+    for (const entry of dataPoints) {
+      // Disregard data prior to start
+      if (entry.date < this.state.startDate) {
+        continue
       }
-      // Find the first non disabled key
-      let disabled = false
-      for (const disabledKey of this.state.disabled) {
-        // Use includes to also catch the perCapita and rollingAverage keys, e.g. newCasesSpainPerCapita would still match 'newCasesSpain'
-        if (key.includes(disabledKey)) {
-          disabled = true
-          break
+      for (const [key, value] of Object.entries(entry)) {
+        // Skip the xaxis
+        if (key === 'date') {
+          continue
         }
-      }
-      if (!disabled) {
-        return key
+        // Skip disabled keys
+        if (this.state.disabled.includes(key)) {
+          continue
+        }
+        // Filter out keys based on perCapita and rollingAverage choice
+        if (!this.state.perCapita && !this.state.rollingAverage) {
+          if (key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) || key.includes(`${DATA_MODIFIERS.ROLLING}`)) {
+            continue
+          }
+        } else if (this.state.perCapita && this.state.rollingAverage) {
+          if (
+            !(key.includes(`total`) && key.includes(`${DATA_MODIFIERS.PER_CAPITA}`)) &&
+            !key.includes(`${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`)
+          ) {
+            continue
+          }
+        } else if (!this.state.perCapita && this.state.rollingAverage) {
+          if (
+            key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) ||
+            (key.includes(`new`) && !key.includes(`${DATA_MODIFIERS.ROLLING}`))
+          ) {
+            continue
+          }
+        } else if (this.state.perCapita && !this.state.rollingAverage) {
+          if (!key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) || key.includes(`${DATA_MODIFIERS.ROLLING}`)) {
+            continue
+          }
+        }
+        if (value > max.value) {
+          max.value = value
+          max.key = key
+        }
       }
     }
-    return ''
+    return max
   }
 
   render() {
@@ -364,16 +301,16 @@ class CoronaChart extends Component {
     const perCapita = this.state.perCapita ? `${DATA_MODIFIERS.PER_CAPITA}` : ''
     const rollingAverage = this.state.rollingAverage ? `${DATA_MODIFIERS.ROLLING}` : ''
 
-    // Set the minimum y axis value based on log/linear and whether perCapita is enabled
-    let yAxisDomain = [0, 'dataMax']
-    if (this.state.scale === 'log' && this.state.perCapita) {
-      yAxisDomain = [0.01, 'dataMax']
-    } else if (this.state.scale === 'log' && !this.state.perCapita) {
-      yAxisDomain = [1, 'dataMax']
-    }
+    // Get the max y value and key based on the current timeframe and the enabled chart lines
+    const yAxisMax = this.getYAxisMax(dataPoints)
 
-    // Figure out which of the currently enabled keys is the first in the yLabelPrioritizedKeys list (including whether they are PerCapita or Rolling keys)
-    let yAxisMaxKey = this.getMaxNonDisabled()
+    // Set the minimum y axis value based on log/linear and whether perCapita is enabled
+    let yAxisDomain = [0, yAxisMax.value]
+    if (this.state.scale === 'log' && this.state.perCapita) {
+      yAxisDomain = [0.01, yAxisMax.value]
+    } else if (this.state.scale === 'log' && !this.state.perCapita) {
+      yAxisDomain = [1, yAxisMax.value]
+    }
 
     return (
       <div>
@@ -448,7 +385,7 @@ class CoronaChart extends Component {
             />
 
             <YAxis
-              dataKey={yAxisMaxKey}
+              dataKey={yAxisMax.key}
               domain={yAxisDomain}
               tick={{ angle: -45, fontSize: 15 }}
               width={40}
