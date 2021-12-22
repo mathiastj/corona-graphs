@@ -30,7 +30,7 @@ const distinguishableColors = [
   '#FF5005',
 ]
 
-const STANDARD_DISABLED_DATA_TYPES = [DATA_TYPES.TOTAL_CASES, DATA_TYPES.TOTAL_DEATHS]
+const STANDARD_DISABLED_DATA_TYPES = [DATA_TYPES.TOTAL_CASES, DATA_TYPES.TOTAL_DEATHS, DATA_TYPES.NEW_DEATHS]
 
 // If the same data types/legends are disabled for each previous country get those back, otherwise get the regularly disabled keys
 const getCommonDisabledDataTypes = (prevCountries, disabled) => {
@@ -72,8 +72,8 @@ class CoronaChart extends Component {
     super(props)
     this.state = {
       scale: 'linear',
-      perCapita: false,
-      rollingAverage: false,
+      perCapita: true,
+      rollingAverage: true,
       startDate: new Date('2020-02-01').getTime(),
     }
   }
