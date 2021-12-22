@@ -10,8 +10,8 @@ const WORLD_POP = 7794798729
 const endpoint = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv'
 const locationsEndpoint = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/locations.csv'
 const initialCountries = [
-  { value: 'Italy', label: 'Italy' },
-  { value: 'Spain', label: 'Spain' },
+  { value: 'Denmark', label: 'Denmark' },
+  { value: 'United Kingdom', label: 'United Kingdom' },
 ]
 const ROLLING_AVERAGE_DAYS = 7
 

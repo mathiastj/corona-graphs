@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { setDifference } from '../utils/set-diff'
 import { DATA_MODIFIERS, DATA_TYPES } from '../utils/constants'
-import { Legend, Label, Line, LineChart, ResponsiveContainer, Surface, Symbols, Tooltip, XAxis, YAxis } from 'recharts'
+import { Legend, Line, LineChart, ResponsiveContainer, Surface, Symbols, Tooltip, XAxis, YAxis } from 'recharts'
 
 const distinguishableColors = [
   '#426600',
@@ -30,7 +30,9 @@ const distinguishableColors = [
   '#FF5005',
 ]
 
-const STANDARD_DISABLED_DATA_TYPES = [DATA_TYPES.TOTAL_CASES, DATA_TYPES.TOTAL_DEATHS]
+const STANDARD_DISABLED_DATA_TYPES = [DATA_TYPES.TOTAL_CASES, DATA_TYPES.TOTAL_DEATHS, DATA_TYPES.NEW_DEATHS]
+
+const TWO_DAYS_AGO = new Date(new Date().setDate(new Date().getDate() - 2))
 
 // If the same data types/legends are disabled for each previous country get those back, otherwise get the regularly disabled keys
 const getCommonDisabledDataTypes = (prevCountries, disabled) => {
@@ -67,80 +69,16 @@ const getCommonDisabledDataTypes = (prevCountries, disabled) => {
   return commonDisabledDataTypes
 }
 
-const calcPrioritizedKeys = (dataPoints, countries) => {
-  const maxPerDataKey = {}
-  for (const country of countries) {
-    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}`] = 0
-    maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}`] = 0
-    maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}`] = 0
-    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}`] = 0
-
-    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
-    maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
-    maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
-    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] = 0
-
-    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`] = 0
-    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`] = 0
-    maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] = 0
-    maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] = 0
-
-    for (const entry of dataPoints) {
-      if (entry[`${DATA_TYPES.NEW_CASES}${country}`] > maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}`]) {
-        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}`] = entry[`${DATA_TYPES.NEW_CASES}${country}`]
-        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
-          entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`]
-      }
-      if (entry[`${DATA_TYPES.TOTAL_CASES}${country}`] > maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}`]) {
-        maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}`] = entry[`${DATA_TYPES.TOTAL_CASES}${country}`]
-        maxPerDataKey[`${DATA_TYPES.TOTAL_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
-          entry[`${DATA_TYPES.TOTAL_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}`]
-      }
-      if (entry[`${DATA_TYPES.TOTAL_DEATHS}${country}`] > maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}`]) {
-        maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}`] = entry[`${DATA_TYPES.TOTAL_DEATHS}${country}`]
-        maxPerDataKey[`${DATA_TYPES.TOTAL_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
-          entry[`${DATA_TYPES.TOTAL_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`]
-      }
-      if (entry[`${DATA_TYPES.NEW_DEATHS}${country}`] > maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}`]) {
-        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}`] = entry[`${DATA_TYPES.NEW_DEATHS}${country}`]
-        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`] =
-          entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}`]
-      }
-      if (
-        entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`] >
-        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`]
-      ) {
-        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`] =
-          entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.ROLLING}`]
-        maxPerDataKey[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] =
-          entry[`${DATA_TYPES.NEW_DEATHS}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`]
-      }
-      if (
-        entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`] >
-        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`]
-      ) {
-        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`] =
-          entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.ROLLING}`]
-        maxPerDataKey[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`] =
-          entry[`${DATA_TYPES.NEW_CASES}${country}${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`]
-      }
-    }
-  }
-  const sortedKeys = Object.keys(maxPerDataKey)
-    .map((key) => {
-      return { key, value: maxPerDataKey[key] }
-      // Sort descending on value
-    })
-    .sort((a, b) => {
-      return b.value - a.value
-    })
-  return sortedKeys.map((sorted) => sorted.key)
-}
-
 class CoronaChart extends Component {
   constructor(props) {
     super(props)
-    this.state = { scale: 'linear', perCapita: false, rollingAverage: false }
+    this.state = {
+      scale: 'linear',
+      perCapita: true,
+      rollingAverage: true,
+      startDate: new Date('2020-02-01').getTime(),
+      endDate: TWO_DAYS_AGO.getTime(),
+    }
   }
 
   handleClick(dataKey) {
@@ -167,6 +105,18 @@ class CoronaChart extends Component {
   handleRollingAverageChange(rollingAverage) {
     this.setState({
       rollingAverage,
+    })
+    this.forceUpdate()
+  }
+  handleStartDateChange(e) {
+    this.setState({
+      startDate: new Date(e.target.value).getTime(),
+    })
+    this.forceUpdate()
+  }
+  handleEndDateChange(e) {
+    this.setState({
+      endDate: new Date(e.target.value).getTime(),
     })
     this.forceUpdate()
   }
@@ -197,7 +147,7 @@ class CoronaChart extends Component {
           }
 
           return (
-            <span>
+            <span key={entry.dataKey}>
               {countryHeader}
               <span onClick={() => this.handleClick(dataKey)} style={style}>
                 <Surface width={20} height={20} style={{ marginBottom: -5 }}>
@@ -285,56 +235,67 @@ class CoronaChart extends Component {
       }
     }
 
-    const yLabelPrioritizedKeys = calcPrioritizedKeys(dataPoints, countries)
-
     return {
       chartLines,
       disabled,
       prevCountries: countries,
-      yLabelPrioritizedKeys,
     }
   }
 
-  getMaxNonDisabled = () => {
-    for (const key of this.state.yLabelPrioritizedKeys) {
-      // Filter out keys based on perCapita and rollingAverage choice
-      if (!this.state.perCapita && !this.state.rollingAverage) {
-        if (key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) || key.includes(`${DATA_MODIFIERS.ROLLING}`)) {
-          continue
-        }
-      } else if (this.state.perCapita && this.state.rollingAverage) {
-        if (
-          !(key.includes(`total`) && key.includes(`${DATA_MODIFIERS.PER_CAPITA}`)) &&
-          !key.includes(`${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`)
-        ) {
-          continue
-        }
-      } else if (!this.state.perCapita && this.state.rollingAverage) {
-        if (
-          key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) ||
-          (key.includes(`new`) && !key.includes(`${DATA_MODIFIERS.ROLLING}`))
-        ) {
-          continue
-        }
-      } else if (this.state.perCapita && !this.state.rollingAverage) {
-        if (!key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) || key.includes(`${DATA_MODIFIERS.ROLLING}`)) {
-          continue
-        }
+  getYAxisMax = (dataPoints) => {
+    const max = {
+      key: '',
+      value: 0,
+    }
+    for (const entry of dataPoints) {
+      // Disregard data prior to start
+      if (entry.date < this.state.startDate) {
+        continue
       }
-      // Find the first non disabled key
-      let disabled = false
-      for (const disabledKey of this.state.disabled) {
-        // Use includes to also catch the perCapita and rollingAverage keys, e.g. newCasesSpainPerCapita would still match 'newCasesSpain'
-        if (key.includes(disabledKey)) {
-          disabled = true
-          break
-        }
+      // Disregard data after end
+      if (entry.date > this.state.endDate) {
+        continue
       }
-      if (!disabled) {
-        return key
+      for (const [key, value] of Object.entries(entry)) {
+        // Skip the xaxis
+        if (key === 'date') {
+          continue
+        }
+        // Skip disabled keys
+        if (this.state.disabled.some((disabledKey) => key.includes(disabledKey))) {
+          continue
+        }
+        // Filter out keys based on perCapita and rollingAverage choice
+        if (!this.state.perCapita && !this.state.rollingAverage) {
+          if (key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) || key.includes(`${DATA_MODIFIERS.ROLLING}`)) {
+            continue
+          }
+        } else if (this.state.perCapita && this.state.rollingAverage) {
+          if (
+            !(key.includes(`total`) && key.includes(`${DATA_MODIFIERS.PER_CAPITA}`)) &&
+            !key.includes(`${DATA_MODIFIERS.PER_CAPITA}${DATA_MODIFIERS.ROLLING}`)
+          ) {
+            continue
+          }
+        } else if (!this.state.perCapita && this.state.rollingAverage) {
+          if (
+            key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) ||
+            (key.includes(`new`) && !key.includes(`${DATA_MODIFIERS.ROLLING}`))
+          ) {
+            continue
+          }
+        } else if (this.state.perCapita && !this.state.rollingAverage) {
+          if (!key.includes(`${DATA_MODIFIERS.PER_CAPITA}`) || key.includes(`${DATA_MODIFIERS.ROLLING}`)) {
+            continue
+          }
+        }
+        if (value > max.value) {
+          max.value = value
+          max.key = key
+        }
       }
     }
-    return ''
+    return max
   }
 
   render() {
@@ -344,25 +305,30 @@ class CoronaChart extends Component {
       return null
     }
 
+    // Quick hack to allow setting start and end date, convert the dates into unix timestamps
+    // If done properly I should use unix timestamps through all the steps in App.js, but that would require more refactoring
+    for (const dataPoint of dataPoints) {
+      dataPoint['date'] = new Date(dataPoint.date).getTime()
+    }
     const data = dataPoints
     const perCapita = this.state.perCapita ? `${DATA_MODIFIERS.PER_CAPITA}` : ''
     const rollingAverage = this.state.rollingAverage ? `${DATA_MODIFIERS.ROLLING}` : ''
 
-    // Set the minimum y axis value based on log/linear and whether perCapita is enabled
-    let yAxisDomain = [0, 'dataMax']
-    if (this.state.scale === 'log' && this.state.perCapita) {
-      yAxisDomain = [0.01, 'dataMax']
-    } else if (this.state.scale === 'log' && !this.state.perCapita) {
-      yAxisDomain = [1, 'dataMax']
-    }
+    // Get the max y value and key based on the current timeframe and the enabled chart lines
+    const yAxisMax = this.getYAxisMax(dataPoints)
 
-    // Figure out which of the currently enabled keys is the first in the yLabelPrioritizedKeys list (including whether they are PerCapita or Rolling keys)
-    let yAxisMaxKey = this.getMaxNonDisabled()
+    // Set the minimum y axis value based on log/linear and whether perCapita is enabled
+    let yAxisDomain = [0, yAxisMax.value]
+    if (this.state.scale === 'log' && this.state.perCapita) {
+      yAxisDomain = [0.01, yAxisMax.value]
+    } else if (this.state.scale === 'log' && !this.state.perCapita) {
+      yAxisDomain = [1, yAxisMax.value]
+    }
 
     return (
       <div>
         <div style={{ width: '85%', display: 'inline-block' }}>
-          <span style={{ float: 'left', 'margin-left': '1rem' }}>
+          <span style={{ float: 'left', marginLeft: '1rem' }}>
             <span onClick={() => this.handleOptionChange('linear')}>
               <input type="radio" id="linear" name="scale" value="linear" checked={this.state.scale === 'linear'} />
               <span style={{ color: '#AAA' }}>Linear</span>
@@ -372,15 +338,40 @@ class CoronaChart extends Component {
               <span style={{ color: '#AAA' }}>Log</span>
             </span>
           </span>
+          <span style={{ float: 'center', marginRight: '0.5rem' }}>
+            <label htmlFor="start-date">Start date:</label>
+            <input
+              onChange={(e) => this.handleStartDateChange(e)}
+              type="date"
+              id="start-date"
+              name="start-date"
+              min="2020-02-01"
+              // Set max to value of the chosen endTime (or the default)
+              max={new Date(this.state.endDate).toISOString().slice(0, 10)}
+            ></input>
+          </span>
+          <span style={{ float: 'center', marginLeft: '0.5rem' }}>
+            <label htmlFor="end-date">End date:</label>
+            <input
+              onChange={(e) => this.handleEndDateChange(e)}
+              type="date"
+              id="end-date"
+              name="end-date"
+              // Set min to value of the chosen startTime (or the default)
+              min={new Date(this.state.startDate).toISOString().slice(0, 10)}
+              // Set max to two days ago, the graph does not make any sense with a later date
+              max={TWO_DAYS_AGO.toISOString().slice(0, 10)}
+            ></input>
+          </span>
           <span
-            style={{ float: 'right', 'margin-right': '1rem' }}
+            style={{ float: 'right', marginRight: '1rem' }}
             onClick={() => this.handlePerCapitaChange(!this.state.perCapita)}
           >
             <input type="checkbox" id="perCapita" name="perCapita" checked={this.state.perCapita} />
             <span style={{ color: '#AAA' }}>Per Million Capita</span>
           </span>
           <span
-            style={{ float: 'right', 'margin-right': '1rem' }}
+            style={{ float: 'right', marginRight: '1rem' }}
             onClick={() => this.handleRollingAverageChange(!this.state.rollingAverage)}
           >
             <input type="checkbox" id="rollingAverage" name="rollingAverage" checked={this.state.rollingAverage} />
@@ -393,6 +384,7 @@ class CoronaChart extends Component {
               .filter((chartLine) => !this.state.disabled.includes(chartLine.dataKey))
               .map((chartLine) => (
                 <Line
+                  key={chartLine.dataKey}
                   connectNulls
                   name={`${chartLine.country} ${chartLine.label.toLowerCase()}`}
                   type="monotone"
@@ -408,28 +400,33 @@ class CoronaChart extends Component {
               ))}
             <XAxis
               dataKey="date"
+              type="number"
+              scale="time"
+              domain={[this.state.startDate, this.state.endDate]}
+              allowDataOverflow={true}
               textAnchor="end"
               tick={{ angle: -70, fontSize: 20 }}
               height={225}
               padding={{ right: 3, left: 3 }}
+              tickFormatter={(unixTime) => new Date(unixTime).toISOString().slice(0, 10)}
             />
 
             <YAxis
-              dataKey={yAxisMaxKey}
+              dataKey={yAxisMax.key}
               domain={yAxisDomain}
               tick={{ angle: -45, fontSize: 15 }}
               width={40}
               scale={this.state.scale}
               allowDataOverflow
               padding={{ top: 3, bottom: 3 }}
-            >
-              {/* <Label value="Persons" angle={-90} position="insideBottomLeft" offset={1} style={{ fontSize: '80%', fill: 'rgba(0, 204, 102, 0.70)' }}></Label> */}
-            </YAxis>
+            />
+            {/* <Label value="Persons" angle={-90} position="insideBottomLeft" offset={1} style={{ fontSize: '80%', fill: 'rgba(0, 204, 102, 0.70)' }}></Label> */}
             <Tooltip
               formatter={(value, name) => [
                 value === null ? 0 : value,
                 `${name} ${this.state.perCapita ? 'per million' : ''}`,
               ]}
+              labelFormatter={(label) => new Date(label).toISOString().slice(0, 10)}
               itemSorter={(item) => -item.value}
               filterNull={false}
               wrapperStyle={{
