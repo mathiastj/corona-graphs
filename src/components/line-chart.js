@@ -147,7 +147,7 @@ class CoronaChart extends Component {
           }
 
           return (
-            <span>
+            <span key={entry.dataKey}>
               {countryHeader}
               <span onClick={() => this.handleClick(dataKey)} style={style}>
                 <Surface width={20} height={20} style={{ marginBottom: -5 }}>
@@ -328,7 +328,7 @@ class CoronaChart extends Component {
     return (
       <div>
         <div style={{ width: '85%', display: 'inline-block' }}>
-          <span style={{ float: 'left', 'margin-left': '1rem' }}>
+          <span style={{ float: 'left', marginLeft: '1rem' }}>
             <span onClick={() => this.handleOptionChange('linear')}>
               <input type="radio" id="linear" name="scale" value="linear" checked={this.state.scale === 'linear'} />
               <span style={{ color: '#AAA' }}>Linear</span>
@@ -338,8 +338,8 @@ class CoronaChart extends Component {
               <span style={{ color: '#AAA' }}>Log</span>
             </span>
           </span>
-          <span style={{ float: 'center', 'margin-right': '0.5rem' }}>
-            <label for="start-date">Start date:</label>
+          <span style={{ float: 'center', marginRight: '0.5rem' }}>
+            <label htmlFor="start-date">Start date:</label>
             <input
               onChange={(e) => this.handleStartDateChange(e)}
               type="date"
@@ -350,8 +350,8 @@ class CoronaChart extends Component {
               max={new Date(this.state.endDate).toISOString().slice(0, 10)}
             ></input>
           </span>
-          <span style={{ float: 'center', 'margin-left': '0.5rem' }}>
-            <label for="end-date">End date:</label>
+          <span style={{ float: 'center', marginLeft: '0.5rem' }}>
+            <label htmlFor="end-date">End date:</label>
             <input
               onChange={(e) => this.handleEndDateChange(e)}
               type="date"
@@ -364,14 +364,14 @@ class CoronaChart extends Component {
             ></input>
           </span>
           <span
-            style={{ float: 'right', 'margin-right': '1rem' }}
+            style={{ float: 'right', marginRight: '1rem' }}
             onClick={() => this.handlePerCapitaChange(!this.state.perCapita)}
           >
             <input type="checkbox" id="perCapita" name="perCapita" checked={this.state.perCapita} />
             <span style={{ color: '#AAA' }}>Per Million Capita</span>
           </span>
           <span
-            style={{ float: 'right', 'margin-right': '1rem' }}
+            style={{ float: 'right', marginRight: '1rem' }}
             onClick={() => this.handleRollingAverageChange(!this.state.rollingAverage)}
           >
             <input type="checkbox" id="rollingAverage" name="rollingAverage" checked={this.state.rollingAverage} />
@@ -384,6 +384,7 @@ class CoronaChart extends Component {
               .filter((chartLine) => !this.state.disabled.includes(chartLine.dataKey))
               .map((chartLine) => (
                 <Line
+                  key={chartLine.dataKey}
                   connectNulls
                   name={`${chartLine.country} ${chartLine.label.toLowerCase()}`}
                   type="monotone"
