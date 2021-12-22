@@ -249,7 +249,7 @@ class CoronaChart extends Component {
           continue
         }
         // Skip disabled keys
-        if (this.state.disabled.includes(key)) {
+        if (this.state.disabled.some((disabledKey) => key.includes(disabledKey))) {
           continue
         }
         // Filter out keys based on perCapita and rollingAverage choice
