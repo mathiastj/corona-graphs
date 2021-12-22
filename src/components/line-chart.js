@@ -32,6 +32,8 @@ const distinguishableColors = [
 
 const STANDARD_DISABLED_DATA_TYPES = [DATA_TYPES.TOTAL_CASES, DATA_TYPES.TOTAL_DEATHS, DATA_TYPES.NEW_DEATHS]
 
+const TWO_DAYS_AGO = new Date(new Date().setDate(new Date().getDate() - 2))
+
 // If the same data types/legends are disabled for each previous country get those back, otherwise get the regularly disabled keys
 const getCommonDisabledDataTypes = (prevCountries, disabled) => {
   let commonDisabledDataTypes = []
@@ -75,6 +77,7 @@ class CoronaChart extends Component {
       perCapita: true,
       rollingAverage: true,
       startDate: new Date('2020-02-01').getTime(),
+      endDate: TWO_DAYS_AGO.getTime(),
     }
   }
 
@@ -108,6 +111,12 @@ class CoronaChart extends Component {
   handleStartDateChange(e) {
     this.setState({
       startDate: new Date(e.target.value).getTime(),
+    })
+    this.forceUpdate()
+  }
+  handleEndDateChange(e) {
+    this.setState({
+      endDate: new Date(e.target.value).getTime(),
     })
     this.forceUpdate()
   }
@@ -243,6 +252,10 @@ class CoronaChart extends Component {
       if (entry.date < this.state.startDate) {
         continue
       }
+      // Disregard data after end
+      if (entry.date > this.state.endDate) {
+        continue
+      }
       for (const [key, value] of Object.entries(entry)) {
         // Skip the xaxis
         if (key === 'date') {
@@ -292,7 +305,7 @@ class CoronaChart extends Component {
       return null
     }
 
-    // Quick hack to allow setting start date, convert the dates into unix timestamps
+    // Quick hack to allow setting start and end date, convert the dates into unix timestamps
     // If done properly I should use unix timestamps through all the steps in App.js, but that would require more refactoring
     for (const dataPoint of dataPoints) {
       dataPoint['date'] = new Date(dataPoint.date).getTime()
@@ -325,16 +338,29 @@ class CoronaChart extends Component {
               <span style={{ color: '#AAA' }}>Log</span>
             </span>
           </span>
-          <span>
+          <span style={{ float: 'center', 'margin-right': '0.5rem' }}>
             <label for="start-date">Start date:</label>
             <input
               onChange={(e) => this.handleStartDateChange(e)}
               type="date"
               id="start-date"
               name="start-date"
-              min="2020-01-01"
+              min="2020-02-01"
+              // Set max to value of the chosen endTime (or the default)
+              max={new Date(this.state.endDate).toISOString().slice(0, 10)}
+            ></input>
+          </span>
+          <span style={{ float: 'center', 'margin-left': '0.5rem' }}>
+            <label for="end-date">End date:</label>
+            <input
+              onChange={(e) => this.handleEndDateChange(e)}
+              type="date"
+              id="end-date"
+              name="end-date"
+              // Set min to value of the chosen startTime (or the default)
+              min={new Date(this.state.startDate).toISOString().slice(0, 10)}
               // Set max to two days ago, the graph does not make any sense with a later date
-              max={new Date(new Date().setDate(new Date().getDate() - 2)).toISOString().slice(0, 10)}
+              max={TWO_DAYS_AGO.toISOString().slice(0, 10)}
             ></input>
           </span>
           <span
@@ -375,7 +401,7 @@ class CoronaChart extends Component {
               dataKey="date"
               type="number"
               scale="time"
-              domain={[this.state.startDate, 'datamax']}
+              domain={[this.state.startDate, this.state.endDate]}
               allowDataOverflow={true}
               textAnchor="end"
               tick={{ angle: -70, fontSize: 20 }}
