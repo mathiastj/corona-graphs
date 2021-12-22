@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { setDifference } from '../utils/set-diff'
 import { DATA_MODIFIERS, DATA_TYPES } from '../utils/constants'
-import { Legend, Label, Line, LineChart, ResponsiveContainer, Surface, Symbols, Tooltip, XAxis, YAxis } from 'recharts'
+import { Legend, Line, LineChart, ResponsiveContainer, Surface, Symbols, Tooltip, XAxis, YAxis } from 'recharts'
 
 const distinguishableColors = [
   '#426600',
@@ -140,7 +140,12 @@ const calcPrioritizedKeys = (dataPoints, countries) => {
 class CoronaChart extends Component {
   constructor(props) {
     super(props)
-    this.state = { scale: 'linear', perCapita: false, rollingAverage: false }
+    this.state = {
+      scale: 'linear',
+      perCapita: false,
+      rollingAverage: false,
+      startDate: new Date('2020-02-01').getTime(),
+    }
   }
 
   handleClick(dataKey) {
@@ -167,6 +172,12 @@ class CoronaChart extends Component {
   handleRollingAverageChange(rollingAverage) {
     this.setState({
       rollingAverage,
+    })
+    this.forceUpdate()
+  }
+  handleStartDateChange(e) {
+    this.setState({
+      startDate: new Date(e.target.value).getTime(),
     })
     this.forceUpdate()
   }
@@ -344,6 +355,11 @@ class CoronaChart extends Component {
       return null
     }
 
+    // Quick hack to allow setting start date, convert the dates into unix timestamps
+    // If done properly I should use unix timestamps through all the steps in App.js, but that would require more refactoring
+    for (const dataPoint of dataPoints) {
+      dataPoint['date'] = new Date(dataPoint.date).getTime()
+    }
     const data = dataPoints
     const perCapita = this.state.perCapita ? `${DATA_MODIFIERS.PER_CAPITA}` : ''
     const rollingAverage = this.state.rollingAverage ? `${DATA_MODIFIERS.ROLLING}` : ''
@@ -371,6 +387,18 @@ class CoronaChart extends Component {
               <input type="radio" id="log" name="scale" value="log" checked={this.state.scale === 'log'} />
               <span style={{ color: '#AAA' }}>Log</span>
             </span>
+          </span>
+          <span>
+            <label for="start-date">Start date:</label>
+            <input
+              onChange={(e) => this.handleStartDateChange(e)}
+              type="date"
+              id="start-date"
+              name="start-date"
+              min="2020-01-01"
+              // Set max to two days ago, the graph does not make any sense with a later date
+              max={new Date(new Date().setDate(new Date().getDate() - 2)).toISOString().slice(0, 10)}
+            ></input>
           </span>
           <span
             style={{ float: 'right', 'margin-right': '1rem' }}
@@ -408,10 +436,15 @@ class CoronaChart extends Component {
               ))}
             <XAxis
               dataKey="date"
+              type="number"
+              scale="time"
+              domain={[this.state.startDate, 'datamax']}
+              allowDataOverflow={true}
               textAnchor="end"
               tick={{ angle: -70, fontSize: 20 }}
               height={225}
               padding={{ right: 3, left: 3 }}
+              tickFormatter={(unixTime) => new Date(unixTime).toISOString().slice(0, 10)}
             />
 
             <YAxis
@@ -422,14 +455,14 @@ class CoronaChart extends Component {
               scale={this.state.scale}
               allowDataOverflow
               padding={{ top: 3, bottom: 3 }}
-            >
-              {/* <Label value="Persons" angle={-90} position="insideBottomLeft" offset={1} style={{ fontSize: '80%', fill: 'rgba(0, 204, 102, 0.70)' }}></Label> */}
-            </YAxis>
+            />
+            {/* <Label value="Persons" angle={-90} position="insideBottomLeft" offset={1} style={{ fontSize: '80%', fill: 'rgba(0, 204, 102, 0.70)' }}></Label> */}
             <Tooltip
               formatter={(value, name) => [
                 value === null ? 0 : value,
                 `${name} ${this.state.perCapita ? 'per million' : ''}`,
               ]}
+              labelFormatter={(label) => new Date(label).toISOString().slice(0, 10)}
               itemSorter={(item) => -item.value}
               filterNull={false}
               wrapperStyle={{
