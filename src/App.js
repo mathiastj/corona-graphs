@@ -6,14 +6,23 @@ import CoronaChart from './components/line-chart'
 import { DATA_MODIFIERS, DATA_TYPES } from './utils/constants'
 import { formatStringToNumberOrNull } from './utils/data-format'
 
-const WORLD_POP = 7794798729
 const endpoint = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/owid-covid-data.csv'
-const locationsEndpoint = 'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/ecdc/locations.csv'
+const locationsEndpoint =
+  'https://raw.githubusercontent.com/owid/covid-19-data/master/public/data/latest/owid-covid-latest.csv'
 const initialCountries = [
   { value: 'Denmark', label: 'Denmark' },
   { value: 'United Kingdom', label: 'United Kingdom' },
 ]
 const ROLLING_AVERAGE_DAYS = 7
+
+const getLocationPopulations = (popDict, locationLines) => {
+  for (const row of locationLines) {
+    const columns = row.split(',')
+    const location = columns[2]
+    const population = columns[48]
+    popDict[location] = population
+  }
+}
 
 const parseData = (input, locations) => {
   const newExtraction = {}
@@ -21,10 +30,7 @@ const parseData = (input, locations) => {
   const dataPerLine = String(input).split('\n')
   const locationLines = String(locations).split('\n')
   const popDict = {}
-  locationLines.splice(1, locationLines.length).map((row) => {
-    const [, location, , , population] = row.split(',')
-    popDict[location] = population
-  })
+  getLocationPopulations(popDict, locationLines.splice(1, locationLines.length)) // Remove the first line with the headers
   let header = true
   const firstDataPointPerPlace = {}
   for (const line of dataPerLine) {
@@ -181,10 +187,6 @@ class App extends Component {
           filteredDataPoint[`${DATA_TYPES.TOTAL_DEATHS}${country.value}`] = totalDeaths
 
           let popData = dataPoint[`popData${country.value}`] || null
-          // Hardcode world population since it's not in the source
-          if (!popData && country.value === 'World') {
-            popData = WORLD_POP
-          }
 
           // Get data per million capita and use very hackish way to round floats
           const [nc, nd, tc, td] = [newCases, newDeaths, totalCases, totalDeaths].map(
