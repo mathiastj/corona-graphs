@@ -12,7 +12,7 @@
     "react-dropdown": "^1.7.0",
     "react-scripts": "^5.0.0",
     "react-select": "^3.0.8",
-    "recharts": "^2.1.8"
+    "recharts": "^2.1.14"
   },
   "homepage": "https://mathiastj.github.io/corona-graphs",
   "scripts": {
