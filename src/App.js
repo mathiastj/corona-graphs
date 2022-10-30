@@ -19,7 +19,7 @@ const getLocationPopulations = (popDict, locationLines) => {
   for (const row of locationLines) {
     const columns = row.split(',')
     const location = columns[2]
-    const population = columns[48]
+    const population = columns[62]
     popDict[location] = population
   }
 }
